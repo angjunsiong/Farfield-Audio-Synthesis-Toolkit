@@ -1,0 +1,425 @@
+[
+  {
+    "serial": 0,
+    "file_name": "0_sample_audio_opus_decoded.wav",
+    "original_speech_file": "Gump.wav",
+    "sampling_rate": 16000,
+    "sample_len": 152706,
+    "generate_clean_speech": {
+      "tempo_change_rate": 0.8362725032334074,
+      "pitch_shift": -1
+    },
+    "add_room_reverb": {
+      "mode": "random_single",
+      "RIRs_used": [
+        "Room007-00005.wav.npy"
+      ]
+    },
+    "stationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0064.wav",
+        "effects": {
+          "list_of_delays": [
+            0.059962530994947236
+          ],
+          "list_of_decays": [
+            0.11397035966959884
+          ],
+          "low_pass": {
+            "low_pass_order": 5,
+            "low_pass_cutoff": 5408
+          }
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": null
+      },
+      "noise_2": {
+        "noise_name": "noise-free-sound-0030.wav",
+        "effects": {
+          "list_of_delays": [
+            0.11912539590849064
+          ],
+          "list_of_decays": [
+            0.15722345809851784
+          ],
+          "low_pass": {
+            "low_pass_order": 5,
+            "low_pass_cutoff": 4486
+          }
+        },
+        "noise_to_stack_NNR": 0.8790769756743408,
+        "pad_size": null
+      }
+    },
+    "nonstationary_noise": {},
+    "combine_speech_noise": {
+      "stationary_nonstationary_NNR": 0.7026013501754402,
+      "speech_noise_SNR": 0.0610342941941413
+    },
+    "simulate_fabric": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "ir_10BJ_0deg_aligned_smooth.npy",
+        "ir_5HD_0deg_aligned_smooth.npy",
+        "ir_9LC_0deg_aligned_smooth.npy"
+      ]
+    },
+    "simulate_mobile": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "IR_realme_gt.npy",
+        "IR_huawei_p30.npy",
+        "IR_huawei_nova_9_se.npy"
+      ]
+    },
+    "simulate_codec": "opus"
+  },
+  {
+    "serial": 1,
+    "file_name": "1_sample_audio_opus_decoded.wav",
+    "original_speech_file": "Gump.wav",
+    "sampling_rate": 16000,
+    "sample_len": 158723,
+    "generate_clean_speech": {
+      "tempo_change_rate": 0.8045706974426374,
+      "pitch_shift": -2
+    },
+    "add_room_reverb": {
+      "mode": "random_single",
+      "RIRs_used": [
+        "Room007-00004.wav.npy"
+      ]
+    },
+    "stationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0004.wav",
+        "effects": {
+          "low_pass": {
+            "low_pass_order": 3,
+            "low_pass_cutoff": 6958
+          }
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": null
+      },
+      "noise_2": {
+        "noise_name": "noise-free-sound-0064.wav",
+        "effects": {
+          "list_of_delays": [
+            0.12879558048193723,
+            0.2697369615296822,
+            0.2945468717025825
+          ],
+          "list_of_decays": [
+            0.12865875091580864,
+            0.13151805178228324,
+            0.15855600863857067
+          ],
+          "low_pass": {
+            "low_pass_order": 2,
+            "low_pass_cutoff": 4732
+          }
+        },
+        "noise_to_stack_NNR": 4.191191467881824,
+        "pad_size": null
+      }
+    },
+    "nonstationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0069.wav",
+        "effects": {
+          "list_of_delays": [
+            0.10896673398561514,
+            0.1436976206708796,
+            0.17226907451549192
+          ],
+          "list_of_decays": [
+            0.12242918710337485,
+            0.18021697275837703,
+            0.1881348283195755
+          ]
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": 98585
+      },
+      "noise_2": {
+        "noise_name": "noise-free-sound-0025.wav",
+        "effects": {
+          "list_of_delays": [
+            0.14267199620230905
+          ],
+          "list_of_decays": [
+            0.16591077611473815
+          ]
+        },
+        "noise_to_stack_NNR": -3.2862006250624765,
+        "pad_size": 134816
+      }
+    },
+    "combine_speech_noise": {
+      "stationary_nonstationary_NNR": 18.395313022888335,
+      "speech_noise_SNR": 17.837909007697093
+    },
+    "simulate_fabric": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "ir_10BJ_90deg_aligned_smooth.npy",
+        "ir_10BJ_180deg_aligned_smooth.npy",
+        "ir_6LS_90deg_aligned_smooth.npy"
+      ]
+    },
+    "simulate_mobile": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "IR_huawei_nova_9_se.npy",
+        "IR_huawei_p30.npy",
+        "IR_moto_edge_20.npy"
+      ]
+    },
+    "simulate_codec": "opus"
+  },
+  {
+    "serial": 2,
+    "file_name": "2_sample_audio_opus_decoded.wav",
+    "original_speech_file": "Gump.wav",
+    "sampling_rate": 16000,
+    "sample_len": 128578,
+    "generate_clean_speech": {
+      "tempo_change_rate": 0.9931997449959618,
+      "pitch_shift": 2
+    },
+    "add_room_reverb": {
+      "mode": "random_single",
+      "RIRs_used": [
+        "Room007-00008.wav.npy"
+      ]
+    },
+    "stationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0021.wav",
+        "effects": {
+          "list_of_delays": [
+            0.10739431108247299,
+            0.24948224760300597
+          ],
+          "list_of_decays": [
+            0.1716384715274527,
+            0.1939173453247228
+          ],
+          "low_pass": {
+            "low_pass_order": 2,
+            "low_pass_cutoff": 6306
+          }
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": null
+      }
+    },
+    "nonstationary_noise": {},
+    "combine_speech_noise": {
+      "stationary_nonstationary_NNR": -2.529502666683804,
+      "speech_noise_SNR": 7.69938385927945
+    },
+    "simulate_fabric": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "ir_5HD_180deg_aligned_smooth.npy",
+        "ir_7SW_0deg_aligned_smooth.npy",
+        "ir_6LS_180deg_aligned_smooth.npy"
+      ]
+    },
+    "simulate_mobile": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "IR_poco_m4_pro.npy",
+        "IR_iphone_12_mini.npy",
+        "IR_xiaomi_12_x.npy"
+      ]
+    },
+    "simulate_codec": "opus"
+  },
+  {
+    "serial": 3,
+    "file_name": "3_sample_audio_opus_decoded.wav",
+    "original_speech_file": "Gump.wav",
+    "sampling_rate": 16000,
+    "sample_len": 124264,
+    "generate_clean_speech": {
+      "tempo_change_rate": 1.0276820728275833,
+      "pitch_shift": 1
+    },
+    "add_room_reverb": {
+      "mode": "random_single",
+      "RIRs_used": [
+        "Room007-00005.wav.npy"
+      ]
+    },
+    "stationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0001.wav",
+        "effects": {
+          "list_of_delays": [
+            0.11105684676391563,
+            0.24891434313162136
+          ],
+          "list_of_decays": [
+            0.110638896743745,
+            0.114022378393656
+          ],
+          "low_pass": {
+            "low_pass_order": 4,
+            "low_pass_cutoff": 6824
+          }
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": null
+      }
+    },
+    "nonstationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0069.wav",
+        "effects": {
+          "list_of_delays": [
+            0.10725629952993329
+          ],
+          "list_of_decays": [
+            0.10324599337598017
+          ]
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": 43602
+      }
+    },
+    "combine_speech_noise": {
+      "stationary_nonstationary_NNR": -1.0321420063549342,
+      "speech_noise_SNR": 4.6389839915217745
+    },
+    "simulate_fabric": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "ir_4LF_180deg_aligned_smooth.npy",
+        "ir_1PT_0deg_aligned_smooth.npy",
+        "ir_3BP_0deg_aligned_smooth.npy"
+      ]
+    },
+    "simulate_mobile": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "IR_xiaomi_12_x.npy",
+        "IR_moto_edge_20.npy",
+        "IR_rog_phone_3.npy"
+      ]
+    },
+    "simulate_codec": "opus"
+  },
+  {
+    "serial": 4,
+    "file_name": "4_sample_audio_opus_decoded.wav",
+    "original_speech_file": "Gump.wav",
+    "sampling_rate": 16000,
+    "sample_len": 119669,
+    "generate_clean_speech": {
+      "tempo_change_rate": 1.0671477478230353,
+      "pitch_shift": -2
+    },
+    "add_room_reverb": {
+      "mode": "random_single",
+      "RIRs_used": [
+        "Room007-00001.wav.npy"
+      ]
+    },
+    "stationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0001.wav",
+        "effects": {
+          "list_of_delays": [
+            0.13753722866912488,
+            0.15606058033500972,
+            0.33797075767225915
+          ],
+          "list_of_decays": [
+            0.1071818459982249,
+            0.1649817306963388,
+            0.1809097336295998
+          ],
+          "low_pass": {
+            "low_pass_order": 4,
+            "low_pass_cutoff": 5653
+          }
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": null
+      },
+      "noise_2": {
+        "noise_name": "noise-free-sound-0030.wav",
+        "effects": {
+          "list_of_delays": [
+            0.1305736869119906
+          ],
+          "list_of_decays": [
+            0.188296526467358
+          ],
+          "low_pass": {
+            "low_pass_order": 5,
+            "low_pass_cutoff": 4887
+          }
+        },
+        "noise_to_stack_NNR": 1.0161911129689907,
+        "pad_size": null
+      }
+    },
+    "nonstationary_noise": {
+      "noise_1": {
+        "noise_name": "noise-free-sound-0004.wav",
+        "effects": {
+          "list_of_delays": [
+            0.12519287758220587,
+            0.1253078729611228,
+            0.35745232739163896
+          ],
+          "list_of_decays": [
+            0.12011355184970186,
+            0.1413924520577858,
+            0.1679704535138992
+          ]
+        },
+        "noise_to_stack_NNR": null,
+        "pad_size": 48632
+      },
+      "noise_2": {
+        "noise_name": "noise-free-sound-0069.wav",
+        "effects": {
+          "list_of_delays": [
+            0.07029336950591147
+          ],
+          "list_of_decays": [
+            0.14420596473399072
+          ]
+        },
+        "noise_to_stack_NNR": -3.171052906933236,
+        "pad_size": 47143
+      }
+    },
+    "combine_speech_noise": {
+      "stationary_nonstationary_NNR": 13.920339243795286,
+      "speech_noise_SNR": 12.87859050128911
+    },
+    "simulate_fabric": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "ir_7SW_0deg_aligned_smooth.npy",
+        "ir_8CT_180deg_aligned_smooth.npy",
+        "ir_7SW_0deg_aligned_smooth.npy"
+      ]
+    },
+    "simulate_mobile": {
+      "mode": "random_mix",
+      "RIRs_used": [
+        "IR_huawei_nova_9_se.npy",
+        "IR_huawei_nova_9.npy",
+        "IR_huawei_nova_9.npy"
+      ]
+    },
+    "simulate_codec": "opus"
+  }
+]
