@@ -1,4 +1,5 @@
 import wave
+
 import pyogg
 
 if __name__ == "__main__":
