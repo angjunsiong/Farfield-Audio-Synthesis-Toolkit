@@ -12,9 +12,6 @@ from .opus_buffered_encoder import OpusBufferedEncoder
 from .pyogg_error import PyOggError
 
 
-# from .opus_encoder import OpusEncoder
-
-
 class OggOpusWriter():
     """Encodes PCM data into an OggOpus file."""
 

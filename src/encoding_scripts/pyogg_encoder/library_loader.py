@@ -69,9 +69,12 @@ class InternalLibrary:
 
         # Attempt to load the library from here
         path = _here + "/" + lib_dir + "/" + name
+        print(f"[FAST DEBUG] Attempting to load internal library: {path}")
         try:
             lib = ctypes.CDLL(path)
+            print(f"[FAST DEBUG] SUCCESS: Loaded internal library from: {path}")
         except OSError as e:
+            print(f"[FAST DEBUG] FAILED to load internal library: {e}")
             return None
 
         # Check that the library passes the tests
@@ -110,9 +113,11 @@ class ExternalLibrary:
             candidate = style.format(name)
             library = ctypes.util.find_library(candidate)
             if library:
+                print(f"[FAST DEBUG] Found external library candidate: {library}")
                 try:
                     lib = ctypes.CDLL(library)
                     if tests and all(run_tests(lib, tests)):
+                        print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
                         return lib
                 except:
                     pass
@@ -128,9 +133,11 @@ class ExternalLibrary:
             candidate = style.format(name)
             library = ctypes.util.find_library(candidate)
             if library:
+                print(f"[FAST DEBUG] Found external library candidate: {library}")
                 try:
                     lib = ctypes.CDLL(library)
                     if tests and all(run_tests(lib, tests)):
+                        print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
                         return lib
                     not_supported.append(library)
                 except WindowsError:

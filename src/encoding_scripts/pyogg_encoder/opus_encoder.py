@@ -356,3 +356,47 @@ class OpusEncoder:
 
         # Return our newly-created encoder
         return encoder
+
+
+    def setup_encoder(self) -> None:
+        """
+        Explicitly creates and initializes the underlying C-level Opus encoder
+        based on the previously set configuration (application, sample rate, etc.).
+
+        This must be called after setting basic parameters and before setting
+        advanced controls like bitrate.
+        """
+        if self._encoder is None:
+            self._encoder = self._create_encoder()
+
+    def set_ctl(self, request: int, value: int) -> None:
+        """
+        A generic method to set encoder options via opus_encoder_ctl.
+
+        This allows setting various advanced options like bitrate, VBR, and complexity.
+        The encoder must be set up via setup_encoder() before calling this method.
+
+        :param request: The ctl request code (e.g., opus.OPUS_SET_BITRATE_REQUEST).
+        :param value: The integer value for the setting.
+        """
+        # This is the key change: We now REQUIRE the encoder to exist.
+        if self._encoder is None:
+            raise PyOggError(
+                "Encoder has not been set up. Call setup_encoder() "
+                "before setting advanced controls."
+            )
+
+        # The value must be passed as a pointer to a 32-bit integer
+        c_value = opus.opus_int32(value)
+
+        result = opus.opus_encoder_ctl(
+            self._encoder,
+            request,
+            ctypes.byref(c_value)
+        )
+
+        if result != opus.OPUS_OK:
+            raise PyOggError(
+                f"Failed to set Opus encoder ctl request {request}: " +
+                opus.opus_strerror(result).decode("utf")
+            )

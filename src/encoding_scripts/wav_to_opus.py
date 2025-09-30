@@ -1,50 +1,61 @@
-import wave
+import os
 
-from pyogg_encoder import OggOpusWriter
-from pyogg_encoder import OpusBufferedEncoder
+from pyogg_encoder import OpusApplication
+from pyogg_encoder import PyOggError
+from pyogg_encoder import encode_opus
 
 
-def wav_to_opus(wav_input_path: str, opus_output_path: str):
+def wav_to_opus(
+        wav_input_path: str,
+        opus_output_path: str,
+        application: OpusApplication = OpusApplication.AUDIO,
+        bitrate: int | None = 128000,
+        vbr: bool = True,
+        complexity: int | None = 10
+) -> None:
+    """
+    Converts a WAV file to an OggOpus file with specified quality settings.
 
-    # Open the input WAV file
-    with wave.open(wav_input_path, 'rb') as wav_file:
-        # Get audio parameters from the WAV file
-        channels = wav_file.getnchannels()
-        sampling_frequency = wav_file.getframerate()
-        bytes_per_sample = wav_file.getsampwidth()
+    This is a simplified wrapper around the core `encode_opus` function.
 
-        # The Opus encoder requires 16-bit audio
-        if bytes_per_sample != 2:
-            print(f"Error: WAV file must be 16-bit, but this file is {bytes_per_sample * 8}-bit.")
-            return
+    :param wav_input_path: Path to the input 16-bit WAV file.
+    :param opus_output_path: The full path where the output Opus file will be saved.
+    :param application: The Opus application mode (AUDIO, VOIP, etc.).
+    :param bitrate: Target bitrate in bits per second.
+    :param vbr: Whether to use Variable Bitrate.
+    :param complexity: Encoder complexity (0-10).
+    :raises PyOggError: If an error occurs during the encoding process.
+    :raises FileNotFoundError: If the input WAV file does not exist.
+    """
+    # The core `encode_opus` function needs a directory to write its output,
+    # which it names based on the input file. We use the desired output
+    # directory for this temporary step.
+    output_dir = os.path.dirname(os.path.abspath(opus_output_path))
+    os.makedirs(output_dir, exist_ok=True)
 
-        print(f"WAV file properties: {channels} channels, {sampling_frequency} Hz")
+    if not os.path.exists(wav_input_path):
+        raise FileNotFoundError(f"Input file not found: {wav_input_path}")
 
-        # Configure the Opus encoder
-        encoder = OpusBufferedEncoder()
-        encoder.set_application('audio')
-        encoder.set_sampling_frequency(sampling_frequency)
-        encoder.set_channels(channels)
-        encoder.set_frame_size(20)
+    try:
+        # Call the core encoder. It will place a file like 'input_name.opus'
+        # into the output_dir.
+        temp_encoded_path = encode_opus(
+            wav_path=wav_input_path,
+            tmp_folder=output_dir,
+            application=application,
+            bitrate=bitrate,
+            vbr=vbr,
+            complexity=complexity
+        )
 
-        # Initialize the OggOpus writer with the encoder
-        writer = OggOpusWriter(opus_output_path, encoder)
+        # Rename the generated file to the exact output path requested by the user.
+        # This handles the case where the auto-generated name is not the desired name.
+        if temp_encoded_path != opus_output_path:
+            os.rename(temp_encoded_path, opus_output_path)
 
-        print(f"Encoding '{wav_input_path}' to '{opus_output_path}'...")
-
-        # Read the WAV in chunks and feed it to the writer
-        chunk_size_frames = 4096
-        while True:
-            pcm_chunk = wav_file.readframes(chunk_size_frames)
-            if not pcm_chunk:
-                break
-            # The writer handles the buffering and encoding
-            writer.write(memoryview(pcm_chunk))
-
-    # IMPORTANT: Close the writer to finalize the file
-    writer.close()
-
-    print("Conversion successful.")
+    except (PyOggError, ValueError) as e:
+        print(f"Failed to convert {wav_input_path} to Opus: {e}")
+        raise
 
 
 if __name__ == '__main__':
