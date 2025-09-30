@@ -87,6 +87,15 @@ class OggOpusWriter():
             # Assume it's already opened file
             self._file = f
 
+        # --- NEW LOGIC: WRITE HEADERS IMMEDIATELY ---
+        # By writing the headers during construction, we guarantee that any
+        # created file is a valid (though empty) OggOpus file from the start.
+        pre_skip = self._write_headers(self._custom_pre_skip)
+        if self._custom_pre_skip is None:
+            # Also write the initial silence frame as part of the setup.
+            self._write_silence(pre_skip)
+        # --- END OF NEW LOGIC ---
+
     def __del__(self) -> None:
         if not self._finished:
             self.close()

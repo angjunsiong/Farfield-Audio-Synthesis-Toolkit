@@ -31,11 +31,11 @@ def encode_opus(
         wav_path: str,
         output_opus_path: str,
         application: OpusApplication = OpusApplication.AUDIO,
-        sampling_rate: int = 16000,
+        sampling_rate: int | None = None,
         frame_size: int = 20,
-        bitrate: int | None = 128000,
+        bitrate: int | None = None,
         vbr: bool = True,
-        complexity: int | None = 10
+        complexity: int | None = None
 ) -> str:
     """
     Encodes a WAV file to an OggOpus file using the vendored pyogg_encoder.
@@ -75,11 +75,19 @@ def encode_opus(
             if wav_file.getsampwidth() != 2:
                 raise PyOggError(f"WAV file must be 16-bit PCM, but '{wav_path}' is not.")
 
-            # 1. Create and fully configure the Opus encoder first.
+            # --- NEW: Auto-detect the sample rate ---
+            file_sampling_rate = wav_file.getframerate()
+
+            # Use the provided sampling_rate if specified, otherwise use the file's rate.
+            encoder_sampling_rate = sampling_rate if sampling_rate is not None else file_sampling_rate
+            # --- END OF NEW LOGIC ---
+
+            # 1. Configure the Opus encoder
             encoder = OpusBufferedEncoder()
             # Use the .value attribute of the enum to get the underlying string
             encoder.set_application(application.value)
-            encoder.set_sampling_frequency(sampling_rate)
+            # Use the detected or specified rate
+            encoder.set_sampling_frequency(encoder_sampling_rate)
             encoder.set_channels(channels)
             encoder.set_frame_size(frame_size)
 
@@ -102,8 +110,8 @@ def encode_opus(
                 # The writer handles buffering and encoding the PCM chunk
                 writer.write(memoryview(pcm_chunk))
 
-        # 4. IMPORTANT: Close the writer to finalize the Ogg stream and write metadata
-        writer.close()
+        # # 4. IMPORTANT: Close the writer to finalize the Ogg stream and write metadata
+        # writer.close()
 
     except (PyOggError, ValueError) as e:
         print(f"An error occurred during Opus encoding: {e}")
@@ -111,6 +119,13 @@ def encode_opus(
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         raise
+    finally:
+        # 4. IMPORTANT: This block ALWAYS runs, ensuring the file is
+        # finalized and closed even if an error occurred above.
+        try:
+            writer.close()
+        except Exception as e:
+            print(f"Warning: Failed to close OggOpusWriter: {e}")
 
     return encoded_path
 

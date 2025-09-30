@@ -50,4 +50,4 @@ def opus_to_wav(
 
 
 if __name__ == '__main__':
-    opus_to_wav("sample1.opus", "sample1.wav", overwrite=True)
+    opus_to_wav("sample1_converted.opus", "sample1_converted.wav", overwrite=True)
