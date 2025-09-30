@@ -1,6 +1,5 @@
-import os
 import subprocess
-
+import os
 
 def encode_opus(wav_path, tmp_folder, bit_rate="24k", sampling_rate=16000):
     # Use ffmpeg to encode WAV file to Opus
@@ -12,13 +11,10 @@ def encode_opus(wav_path, tmp_folder, bit_rate="24k", sampling_rate=16000):
 
     return encoded_path
 
-
-def decode_opus(opus_encoded_path, output_folder, encoding="pcm_s16le", sampling_rate=16000, count="",
-                decoded_path=None):
+def decode_opus(opus_encoded_path, output_folder, encoding = "pcm_s16le", sampling_rate = 16000, count="", decoded_path = None):
     # Use ffmpeg to decode the Opus file back to WAV
     if decoded_path == None:
-        decoded_path = os.path.join(output_folder, count + "_" + opus_encoded_path.split('/')[-1].replace('.opus',
-                                                                                                          '_opus_decoded.wav'))
+        decoded_path = os.path.join(output_folder, count+"_"+opus_encoded_path.split('/')[-1].replace('.opus','_opus_decoded.wav'))
     else:
         decoded_path = os.path.join(output_folder, decoded_path)
     # control encoding "-c:a pcm_s16le"; sampling_rate with "-ar 48000"
@@ -27,7 +23,6 @@ def decode_opus(opus_encoded_path, output_folder, encoding="pcm_s16le", sampling
     subprocess.run(command, shell=True, check=True)
 
     return decoded_path
-
 
 def main():
     input_wav_path = 'input.wav'
@@ -39,7 +34,6 @@ def main():
     # Decode the Opus encoded audio back to WAV
     decoded_path = decode_opus(encoded_path)
     print(f"Decoded to: {decoded_path}")
-
 
 if __name__ == "__main__":
     main()
