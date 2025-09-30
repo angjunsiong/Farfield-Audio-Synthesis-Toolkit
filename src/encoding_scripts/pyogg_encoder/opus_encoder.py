@@ -292,7 +292,12 @@ class OpusEncoder:
     # Internal methods
     #
 
-    def _create_encoder(self) -> ctypes.pointer:
+    def _create_encoder(
+            self,
+            bitrate: int | None = None,
+            vbr: bool = True,
+            complexity: int | None = None
+    ) -> ctypes.pointer:
         # To create an encoder, we must first allocate resources for it.
         # We want Python to be responsible for the memory deallocation,
         # and thus Python must be responsible for the initial memory
@@ -354,49 +359,38 @@ class OpusEncoder:
                 opus.opus_strerror(error).decode("utf")
             )
 
-        # Return our newly-created encoder
+        # --- NEW: APPLY ALL CTL SETTINGS IMMEDIATELY AFTER INIT ---
+        # This is the guaranteed correct place to configure the encoder.
+        if bitrate is not None:
+            c_value = opus.opus_int32(bitrate)
+            opus.opus_encoder_ctl(encoder, opus.OPUS_SET_BITRATE_REQUEST, ctypes.byref(c_value))
+
+        c_vbr_value = opus.opus_int32(1 if vbr else 0)
+        opus.opus_encoder_ctl(encoder, opus.OPUS_SET_VBR_REQUEST, ctypes.byref(c_vbr_value))
+
+        if complexity is not None:
+            if not 0 <= complexity <= 10:
+                raise ValueError("Complexity must be an integer between 0 and 10.")
+            c_complexity = opus.opus_int32(complexity)
+            opus.opus_encoder_ctl(encoder, opus.OPUS_SET_COMPLEXITY_REQUEST, ctypes.byref(c_complexity))
+
+        # Return our newly-created and fully-configured encoder
         return encoder
 
-
-    def setup_encoder(self) -> None:
+    def setup_encoder(
+            self,
+            bitrate: int | None = None,
+            vbr: bool = True,
+            complexity: int | None = None
+    ) -> None:
         """
         Explicitly creates and initializes the underlying C-level Opus encoder
-        based on the previously set configuration (application, sample rate, etc.).
-
-        This must be called after setting basic parameters and before setting
-        advanced controls like bitrate.
+        with all specified quality settings.
         """
         if self._encoder is None:
-            self._encoder = self._create_encoder()
-
-    def set_ctl(self, request: int, value: int) -> None:
-        """
-        A generic method to set encoder options via opus_encoder_ctl.
-
-        This allows setting various advanced options like bitrate, VBR, and complexity.
-        The encoder must be set up via setup_encoder() before calling this method.
-
-        :param request: The ctl request code (e.g., opus.OPUS_SET_BITRATE_REQUEST).
-        :param value: The integer value for the setting.
-        """
-        # This is the key change: We now REQUIRE the encoder to exist.
-        if self._encoder is None:
-            raise PyOggError(
-                "Encoder has not been set up. Call setup_encoder() "
-                "before setting advanced controls."
-            )
-
-        # The value must be passed as a pointer to a 32-bit integer
-        c_value = opus.opus_int32(value)
-
-        result = opus.opus_encoder_ctl(
-            self._encoder,
-            request,
-            ctypes.byref(c_value)
-        )
-
-        if result != opus.OPUS_OK:
-            raise PyOggError(
-                f"Failed to set Opus encoder ctl request {request}: " +
-                opus.opus_strerror(result).decode("utf")
+            # Pass all configuration values directly to the creation method
+            self._encoder = self._create_encoder(
+                bitrate=bitrate,
+                vbr=vbr,
+                complexity=complexity
             )

@@ -29,7 +29,7 @@ class OpusApplication(Enum):
 
 def encode_opus(
         wav_path: str,
-        tmp_folder: str,
+        output_opus_path: str,
         application: OpusApplication = OpusApplication.AUDIO,
         sampling_rate: int = 16000,
         frame_size: int = 20,
@@ -45,7 +45,7 @@ def encode_opus(
     (music) layers of the Opus codec.
 
     :param wav_path: Path to the input WAV file. Must be 16-bit PCM.
-    :param tmp_folder: Folder where the temporary output Opus file will be stored.
+    :param output_opus_path: The full, final path for the output Opus file.
     :param application: The Opus application mode to use for encoding.
     :param sampling_rate: The sampling rate of the audio in Hz (e.g., 16000).
     :param frame_size: Opus frame size in milliseconds (e.g., 20, 40, 60).
@@ -54,14 +54,15 @@ def encode_opus(
     :param vbr: If True, enables Variable Bitrate for better quality.
     :param complexity: Encoder complexity (0-10). 10 is highest quality but slowest.
                        If None, the codec's default is used.
-    :return: The path to the encoded Opus file.
-
-    :raises PyOggError: If an error occurs during the encoding process.
+    :return: The path to the encoded Opus file (the same as output_opus_path).
     """
-    # Define the output path for the encoded opus file
-    base_name = os.path.basename(wav_path)
-    opus_name = os.path.splitext(base_name)[0] + '.opus'
-    encoded_path = os.path.join(tmp_folder, opus_name)
+    # --- SIMPLIFIED LOGIC ---
+    # The function now writes directly to the final destination.
+    encoded_path = output_opus_path
+
+    # Ensure the destination directory exists.
+    output_dir = os.path.dirname(os.path.abspath(encoded_path))
+    os.makedirs(output_dir, exist_ok=True)
 
     try:
         # Open the input WAV file to read its properties and data
@@ -82,20 +83,12 @@ def encode_opus(
             encoder.set_channels(channels)
             encoder.set_frame_size(frame_size)
 
-            # 2. Create the C-level object.
-            encoder.setup_encoder()
-
-            # 3. Set all advanced controls.
-            if bitrate is not None:
-                encoder.set_ctl(opus.OPUS_SET_BITRATE_REQUEST, bitrate)
-
-            # VBR must be passed as an integer (1 for True, 0 for False)
-            encoder.set_ctl(opus.OPUS_SET_VBR_REQUEST, 1 if vbr else 0)
-
-            if complexity is not None:
-                if not 0 <= complexity <= 10:
-                    raise ValueError("Complexity must be an integer between 0 and 10.")
-                encoder.set_ctl(opus.OPUS_SET_COMPLEXITY_REQUEST, complexity)
+            # 2. Create and configure the C-level encoder in a single, safe step
+            encoder.setup_encoder(
+                bitrate=bitrate,
+                vbr=vbr,
+                complexity=complexity
+            )
 
             # 3. Initialize the OggOpus writer with the fully configured encoder
             writer = OggOpusWriter(encoded_path, encoder)

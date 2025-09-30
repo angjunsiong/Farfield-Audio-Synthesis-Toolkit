@@ -1,5 +1,4 @@
 import ctypes
-import warnings
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -96,16 +95,7 @@ class OpusBufferedEncoder(OpusEncoder):
 
         # 'Cast' memoryview of PCM to ctypes Array
         Buffer = ctypes.c_ubyte * len(pcm_bytes)
-        try:
-            pcm_ctypes = Buffer.from_buffer(pcm_bytes)
-        except TypeError:
-            warnings.warn(
-                "Because PCM was read-only, an extra memory " +
-                "copy was required; consider storing PCM in " +
-                "writable memory (for example, bytearray " +
-                "rather than bytes)."
-            )
-            pcm_ctypes = Buffer.from_buffer_copy(pcm_bytes)
+        pcm_ctypes = Buffer.from_buffer_copy(pcm_bytes)
 
         # Either store the encoded packet to return at the end of the
         # method or immediately call the callback with the encoded
