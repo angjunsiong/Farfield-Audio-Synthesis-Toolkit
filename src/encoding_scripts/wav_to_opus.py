@@ -1,3 +1,4 @@
+import logging
 import os
 
 from pyogg_encoder import OpusApplication
@@ -9,7 +10,7 @@ def wav_to_opus(
         wav_input_path: str,
         opus_output_path: str,
         application: OpusApplication = OpusApplication.AUDIO,
-        bitrate: int | None = 128000,
+        bitrate: int | None = 64000,
         vbr: bool = True,
         complexity: int | None = 10,
         overwrite: bool = False,
@@ -30,40 +31,40 @@ def wav_to_opus(
     :raises FileNotFoundError: If the input WAV file does not exist.
     :raises FileExistsError: If the output file exists and overwrite is False.
     """
+    if not os.path.exists(wav_input_path):
+        raise FileNotFoundError(f"Input file not found: {wav_input_path}")
+    if not os.path.isfile(wav_input_path):
+        raise IsADirectoryError(f"Input file is not a file: {wav_input_path}")
+
     # The core `encode_opus` function needs a directory to write its output,
     # which it names based on the input file. We use the desired output
     # directory for this temporary step.
     output_dir = os.path.dirname(os.path.abspath(opus_output_path))
     os.makedirs(output_dir, exist_ok=True)
 
-    if not os.path.exists(wav_input_path):
-        raise FileNotFoundError(f"Input file not found: {wav_input_path}")
-
     if os.path.exists(opus_output_path):
-        if overwrite:
-            # The new encode_opus will overwrite, but we can be explicit
-            # for safety, or just let it handle it. For now, we'll
-            # rely on OggOpusWriter's 'wb' mode to truncate the file.
-            pass
-        else:
+        if not os.path.isfile(opus_output_path):
+            raise IsADirectoryError(f"Output file is not a file: {opus_output_path}")
+        elif not overwrite:
             raise FileExistsError(
                 f"Output file already exists: '{opus_output_path}'. "
-                "Use overwrite=True to replace it."
+                "Use `overwrite=True` to replace it."
             )
+        else:
+            os.remove(opus_output_path)
 
+    # convert wav to opus
     try:
-        # Call the core encoder. It will place a file like 'input_name.opus'
-        # into the output_dir.
         encode_opus(
             wav_path=wav_input_path,
-            output_opus_path=opus_output_path,  # <-- Pass the final path
+            output_opus_path=opus_output_path,
             application=application,
             bitrate=bitrate,
             vbr=vbr,
             complexity=complexity
         )
-    except (PyOggError, ValueError) as e:
-        print(f"Failed to convert {wav_input_path} to Opus: {e}")
+    except (PyOggError, ValueError):
+        logging.exception(f"Failed to convert {wav_input_path} to Opus")
         raise
 
 

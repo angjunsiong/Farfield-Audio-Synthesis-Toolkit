@@ -31,11 +31,11 @@ def encode_opus(
         wav_path: str,
         output_opus_path: str,
         application: OpusApplication = OpusApplication.AUDIO,
-        sampling_rate: int | None = None,
         frame_size: int = 20,
         bitrate: int | None = None,
         vbr: bool = True,
-        complexity: int | None = None
+        complexity: int | None = None,
+        force_sampling_rate: int | None = None,
 ) -> str:
     """
     Encodes a WAV file to an OggOpus file using the vendored pyogg_encoder.
@@ -44,16 +44,16 @@ def encode_opus(
     encoding, allowing for explicit control over the SILK (speech) and CELT
     (music) layers of the Opus codec.
 
+    See also: https://opus-codec.org/docs/opus_api-1.5/group__opus__encoderctls.html
+
     :param wav_path: Path to the input WAV file. Must be 16-bit PCM.
     :param output_opus_path: The full, final path for the output Opus file.
     :param application: The Opus application mode to use for encoding.
-    :param sampling_rate: The sampling rate of the audio in Hz (e.g., 16000).
-    :param frame_size: Opus frame size in milliseconds (e.g., 20, 40, 60).
-    :param bitrate: Target bitrate in bits per second (e.g., 64000, 128000).
-                    If None, the codec's default is used.
+    :param frame_size: Opus frame size in milliseconds (one of {25, 50, 100, 200, 400, 600}).
+    :param bitrate: Target bitrate in bits per second (between 500 and 512000). If None, the codec's default is used.
     :param vbr: If True, enables Variable Bitrate for better quality.
     :param complexity: Encoder complexity (0-10). 10 is highest quality but slowest.
-                       If None, the codec's default is used.
+    :param force_sampling_rate: Override the sampling rate of the audio in Hz (e.g., 16000).
     :return: The path to the encoded Opus file (the same as output_opus_path).
     """
     # --- SIMPLIFIED LOGIC ---
@@ -75,18 +75,13 @@ def encode_opus(
             if wav_file.getsampwidth() != 2:
                 raise PyOggError(f"WAV file must be 16-bit PCM, but '{wav_path}' is not.")
 
-            # --- NEW: Auto-detect the sample rate ---
-            file_sampling_rate = wav_file.getframerate()
-
             # Use the provided sampling_rate if specified, otherwise use the file's rate.
-            encoder_sampling_rate = sampling_rate if sampling_rate is not None else file_sampling_rate
-            # --- END OF NEW LOGIC ---
+            file_sampling_rate = wav_file.getframerate()
+            encoder_sampling_rate = force_sampling_rate if force_sampling_rate is not None else file_sampling_rate
 
             # 1. Configure the Opus encoder
             encoder = OpusBufferedEncoder()
-            # Use the .value attribute of the enum to get the underlying string
             encoder.set_application(application.value)
-            # Use the detected or specified rate
             encoder.set_sampling_frequency(encoder_sampling_rate)
             encoder.set_channels(channels)
             encoder.set_frame_size(frame_size)
@@ -109,9 +104,6 @@ def encode_opus(
                     break
                 # The writer handles buffering and encoding the PCM chunk
                 writer.write(memoryview(pcm_chunk))
-
-        # # 4. IMPORTANT: Close the writer to finalize the Ogg stream and write metadata
-        # writer.close()
 
     except (PyOggError, ValueError) as e:
         print(f"An error occurred during Opus encoding: {e}")

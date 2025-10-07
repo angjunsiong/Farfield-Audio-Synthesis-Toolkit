@@ -1,5 +1,6 @@
 import ctypes
 import ctypes.util
+import logging
 import os
 import platform
 import sys
@@ -72,9 +73,9 @@ class InternalLibrary:
         # print(f"[FAST DEBUG] Attempting to load internal library: {path}")
         try:
             lib = ctypes.CDLL(path)
-        #             print(f"[FAST DEBUG] SUCCESS: Loaded internal library from: {path}")
+            # print(f"[FAST DEBUG] SUCCESS: Loaded internal library from: {path}")
         except OSError as e:
-            #             print(f"[FAST DEBUG] FAILED to load internal library: {e}")
+            logging.exception(f"[FAST DEBUG] FAILED to load internal library from path: {path}")
             return None
 
         # Check that the library passes the tests
@@ -113,14 +114,14 @@ class ExternalLibrary:
             candidate = style.format(name)
             library = ctypes.util.find_library(candidate)
             if library:
-                #                 print(f"[FAST DEBUG] Found external library candidate: {library}")
+                # print(f"[FAST DEBUG] Found external library candidate: {library}")
                 try:
                     lib = ctypes.CDLL(library)
                     if tests and all(run_tests(lib, tests)):
-                        #                         print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
+                        # print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
                         return lib
                 except:
-                    pass
+                    logging.exception(f"[FAST DEBUG] FAILED to load external library: {library}")
 
     @staticmethod
     def load_windows(name, paths=None, tests=[]):
@@ -133,21 +134,22 @@ class ExternalLibrary:
             candidate = style.format(name)
             library = ctypes.util.find_library(candidate)
             if library:
-                #                 print(f"[FAST DEBUG] Found external library candidate: {library}")
+                # print(f"[FAST DEBUG] Found external library candidate: {library}")
                 try:
                     lib = ctypes.CDLL(library)
                     if tests and all(run_tests(lib, tests)):
-                        #                         print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
+                        # print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
                         return lib
                     not_supported.append(library)
                 except WindowsError:
-                    pass
+                    logging.exception(f"[FAST DEBUG] FAILED to load external library: {library}")
                 except OSError:
+                    logging.exception(f"[FAST DEBUG] FAILED to load external library: {library}")
                     not_supported.append(library)
 
         if not_supported:
             raise ExternalLibraryError(
-                "library '{}' couldn't be loaded, because the following candidates were not supported:".format(name)
+                f"library '{name}' couldn't be loaded, because the following candidates were not supported:"
                 + ("\n{}" * len(not_supported)).format(*not_supported))
 
-        raise ExternalLibraryError("library '{}' couldn't be loaded".format(name))
+        raise ExternalLibraryError(f"library '{name}' couldn't be loaded")

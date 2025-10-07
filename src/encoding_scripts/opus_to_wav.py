@@ -1,3 +1,4 @@
+import logging
 import os
 
 from pyogg_encoder import PyOggError
@@ -20,32 +21,39 @@ def opus_to_wav(
     :raises PyOggError: If an error occurs during the decoding process.
     :raises FileNotFoundError: If the input Opus file does not exist.
     """
+    # check input file
     if not os.path.exists(opus_input_path):
         raise FileNotFoundError(f"Input file not found: {opus_input_path}")
+    if not os.path.isfile(opus_input_path):
+        raise IsADirectoryError(f"Input file is not a file: {opus_input_path}")
 
-    # --- NEW: Check for existing file before doing any work ---
-    if os.path.exists(wav_output_path):
-        if overwrite:
-            os.remove(wav_output_path)
-        else:
-            raise FileExistsError(
-                f"Output file already exists: '{wav_output_path}'. "
-                "Use overwrite=True to replace it."
-            )
     # The core `decode_opus` function is designed to take an output folder
     # and a filename, which maps perfectly to our needs.
     output_dir = os.path.dirname(os.path.abspath(wav_output_path))
     output_filename = os.path.basename(wav_output_path)
     os.makedirs(output_dir, exist_ok=True)
 
+    # check output file
+    if os.path.exists(wav_output_path):
+        if not os.path.isfile(wav_output_path):
+            raise IsADirectoryError(f"Output file is not a file: {wav_output_path}")
+        elif not overwrite:
+            raise FileExistsError(
+                f"Output file already exists: '{wav_output_path}'. "
+                "Use `overwrite=True` to replace it."
+            )
+        else:
+            os.remove(wav_output_path)
+
+    # convert opus to wav
     try:
         decode_opus(
             opus_encoded_path=opus_input_path,
             output_folder=output_dir,
             decoded_path=output_filename
         )
-    except PyOggError as e:
-        print(f"Failed to convert {opus_input_path} to WAV: {e}")
+    except PyOggError:
+        logging.exception(f"Failed to convert {opus_input_path} to WAV")
         raise
 
 
