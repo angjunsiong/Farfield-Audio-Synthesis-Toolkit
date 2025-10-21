@@ -2,6 +2,7 @@ import random
 import os
 import tempfile
 import json
+from datetime import datetime
 
 from src.audio_stacker import audio_noise_stack
 from src.audio_effects_new import audio_effector
@@ -34,11 +35,12 @@ def bulk_generation(number_of_audios = 10,
                           "generate_clean_speech":None,
                           "add_room_reverb":None,
                           "stationary_noise":None,
-                          "nonstationary_noise": None,
+                          "nonstationary_noise":None,
                           "combine_speech_noise":None,
                           "simulate_fabric":None,
                           "simulate_mobile":None,
-                          "simulate_codec":None}
+                          "simulate_codec":None,
+                          "phone_lowpass":None}
 
         ## Stage III-A: Generate Clean Speech
         # Load random audio from raw speech folder
@@ -169,8 +171,13 @@ def bulk_generation(number_of_audios = 10,
 
         # Append parameters to experiment log
         experiment_log.append(parameters_log)
-    
-    with open(os.path.join("./output", "experiment_log.json"), "w") as f:
+
+    # Export parameters log as json
+    # Use datetime module to serialise log file
+    now = datetime.now()
+    timestamp = now.strftime("%y%m%d_%H%M%S")
+        
+    with open(os.path.join("./output", f"experiment_log_{timestamp}.json"), "w") as f:
         json.dump(experiment_log, f, indent=2)
 
     return None

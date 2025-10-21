@@ -17,7 +17,7 @@ def ir_convolve(audio_data,
                 sr,
                 mode = "random_mix", #random_mix, random_single, specific_mix, or specific
                 ir_repo = None,
-                no_of_ir = 3,
+                no_of_ir = 4, # 10C4 for fabric, 18C4 for mobile: Ensure richness of IR samples
                 mix_ir_list = None,
                 specific_ir_path = None):
     """
@@ -103,6 +103,6 @@ def ir_convolve(audio_data,
         convolved_audio_data = convolved_audio_data/max_value
 
     ## Repack into audio_data format as per pytorch
-    convolved_audio_data = torch.from_numpy(np.expand_dims(convolved_audio_data, axis=0))
+    convolved_audio_data = torch.from_numpy(convolved_audio_data)
     
     return convolved_audio_data, sr, size_orig, chosen_ir, paras

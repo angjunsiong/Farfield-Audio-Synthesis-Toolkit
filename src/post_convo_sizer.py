@@ -53,7 +53,7 @@ def post_convo_sizer(audio_data,
     ## Numpify torch tensor for following operations
     audio_data = np.squeeze(audio_data.numpy())
 
-    ## For Room IR, detect initial peak in IR and deduct the time gap from front of convolved audio
+    ## For Room IR and mobile IR, detect initial peak in IR and deduct the time gap from front of convolved audio
     if convo_type == "room" or convo_type == "mobile":
 
         # Detect 1st (and logically highest peak in the room IR)
