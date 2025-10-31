@@ -1,4 +1,17 @@
-sampling_rate: 16000
+# Basic acoustic parameters
+acoustics:
+  sampling_rate: 16000
+# Sound travels ~343 m/s. In a 15 to 25 m long room, the first few (i.e. 4) reflections arrive within ~150 ms to ~300ms.
+# With the range we capture reflections carrying the main directional cues
+# Later reflections (triple-bounce and beyond) mainly add diffuse energy, which can often be ignored or approximated for ML purposes.
+  rir_simulated_duration_upper: 0.15
+  rir_simulated_duration_lower: 0.25
+  rir_simulation_order: 6
+# Perceptually: rooms with T60 > 0.8–1 s will sound excessively echoey, which is not true in typical meeting rooms.
+# T60 = 0.6–0.8 s provides a realistic late reverberation tail without being exaggerated.
+# Also prevents excessive computation; using moderate-order reflections + exponential tail keeps it feasible.
+  rir_total_duration_upper: 0.6
+  rir_total_duration_lower: 0.4
 
 # (1) Room Dimensions
 # Refer to schematic
@@ -15,6 +28,7 @@ room_dimensions:
   radius_curve_lower: 3.0
   height_upper: 4.0
   height_lower: 3.0
+  margin: 0.05 # factor measuring minimum distance of mic/source from walls
 
 # (2) Materials for room surfaces
 ## Ceiling (walls[27]): some kind of smooth, hard surface

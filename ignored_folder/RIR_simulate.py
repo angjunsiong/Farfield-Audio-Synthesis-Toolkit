@@ -1,26 +1,25 @@
-## Generate 10,000 IRs
+## File export portion
+## To do: Generate 10,000 IRs
 ## To do: Documentation
-
 
 import argparse
 import numpy as np
-#from scipy.io import wavfile
-#from scipy.signal import fftconvolve
 import matplotlib.pyplot as plt
 import random
 import pyroomacoustics as pra
-import os
+import os # To do up file export portion
 import time
 import yaml
 
 def rir_generate(quantity,
                  config_file,
-                 random_seed,
+                 master_seed,
                  output_folder,
                  preview_mode,
                  ):
     
-
+    print(f"Welcome to the Amazing RIR Generator! You have ordered {quantity} RIRs!...")
+    
     ## Extract parameters from config file
     with open(config_file, 'r') as file:
         parameters = yaml.safe_load(file)
@@ -33,6 +32,7 @@ def rir_generate(quantity,
     radius_curve_upper, radius_curve_lower = parameters["room_dimensions"]["radius_curve_upper"], parameters["room_dimensions"]["radius_curve_lower"]
     height_upper, height_lower = parameters["room_dimensions"]["height_upper"], parameters["room_dimensions"]["height_lower"]
     curved_panels = 8
+    margin = parameters["room_dimensions"]["margin"]
 
     # (2) Materials
     ceiling_mat = parameters["room_materials"]["ceiling"]
@@ -50,13 +50,17 @@ def rir_generate(quantity,
     mic_height_upper, mic_height_lower = parameters["mic"]["mic_height_upper"],parameters["mic"]["mic_height_lower"]
     mic_p_upper, mic_p_lower = parameters["mic"]["mic_p_upper"],parameters["mic"]["mic_p_lower"]
 
-    # Set random seed for reproducibility
-    np.random.seed(random_seed)
-
     # Start Timer
     start_time = time.perf_counter()
 
     for loop in range(quantity):
+
+        # Set seed value
+        # We set a seed number for each loop beginning with the master seed number
+        # this is to facilitate the resumption of RIR generation in the event when something crashes
+        # we will count the number of files in output folder and then add to the master seed each round
+        seed = master_seed + len(os.listdir(output_folder))
+        np.random.seed(seed)
 
         ### A. Create Room
 
@@ -137,9 +141,9 @@ def rir_generate(quantity,
                     coordinate_26]).T  # [x,y]
         
         room = pra.Room.from_corners(corners, 
-                                     fs = parameters["sampling_rate"],
+                                     fs = parameters["acoustics"]["sampling_rate"],
                                      materials = wall_materials,
-                                     max_order = 6)
+                                     max_order = parameters["acoustics"]["rir_simulation_order"])
 
         # C-II. Extrude into 3-D rooms
         room.extrude(height = height)
@@ -155,15 +159,15 @@ def rir_generate(quantity,
         ### D. Set up Source and Mic position
         # source
         source_height = np.random.uniform(source_height_lower, source_height_upper)
-        source_x = radius_curve + np.random.uniform(0, base_length)
-        source_y = np.random.uniform(0, base_width)
+        source_x = radius_curve + np.random.uniform(margin*base_length, base_length*(1-margin))
+        source_y = np.random.uniform(margin*base_length, base_width*(1-margin))
         
         room.add_source([source_x, source_y, source_height])
 
         # mic position
         mic_height = np.random.uniform(mic_height_lower, mic_height_upper)
-        mic_x = radius_curve + np.random.uniform(0, base_length)
-        mic_y = np.random.uniform(0, base_width)
+        mic_x = radius_curve + np.random.uniform(margin * base_length, base_length*(1-margin))
+        mic_y = np.random.uniform(margin * base_width, base_width*(1-margin))
         mic_pos = np.array([[mic_x, mic_y, mic_height]]).T
 
         # mic polar pattern and mic directivity
@@ -176,7 +180,7 @@ def rir_generate(quantity,
             p = mic_p
             )
         
-        my_mic = pra.MicrophoneArray(mic_pos, fs=parameters["sampling_rate"], directivity=directivity)
+        my_mic = pra.MicrophoneArray(mic_pos, fs=parameters["acoustics"]["sampling_rate"], directivity=directivity)
         room.add_microphone_array(my_mic)
 
         if preview_mode:
@@ -195,17 +199,23 @@ def rir_generate(quantity,
         rir = room.rir[0][0]
 
         # Step 1: Generate and generated RIR of a moderate order up to first 0.2s
-        rir_truncated_length = int(0.25 * room.fs)
-        rir_truncated = rir[:rir_truncated_length]
+        rir_simulated_duration_upper = parameters["acoustics"]["rir_simulated_duration_upper"]
+        rir_simulated_duration_lower = parameters["acoustics"]["rir_simulated_duration_lower"]
+        rir_simulated_duration = np.random.uniform(rir_simulated_duration_lower, rir_simulated_duration_upper)
+        rir_simulated_truncated_length = int(rir_simulated_duration * room.fs)
+        rir_simulated_truncated = rir[:rir_simulated_truncated_length]
 
-        # Step 2: Approximate long tail of RIR using exponential decay for another 0.4 seconds (i.e. total 0.6 seconds)
-        T60 = 0.6 # typical reverberation time for large meeting room
-        tail_length = int(T60 * room.fs - rir_truncated_length)
-        t_tail = np.arange(tail_length) / room.fs
-        late_tail = np.abs(rir_truncated[-1]) * np.exp(-6.91 * (t_tail + rir_truncated_length/room.fs) / T60) # note scaling
+        # Step 2: Approximate long tail of RIR using exponential decay (i.e. total 0.6 seconds)
+        rir_total_duration_upper = parameters["acoustics"]["rir_total_duration_upper"]
+        rir_total_duration_lower = parameters["acoustics"]["rir_total_duration_lower"]
+        rir_total_duration = np.random.uniform(rir_total_duration_lower, rir_total_duration_upper) # Also known as T60
+        
+        tail_length = int(rir_total_duration * room.fs - rir_simulated_truncated_length)
+        time_tail = np.arange(tail_length) / room.fs
+        late_tail = np.abs(rir_simulated_truncated[-1]) * np.exp(-6.91 * (time_tail + rir_simulated_duration/room.fs) / rir_total_duration) # note scaling
         
         # Step 3: Concatenante RIR segments
-        rir_final = np.concatenate([rir_truncated, late_tail])
+        rir_final = np.concatenate([rir_simulated_truncated, late_tail])
 
         ##############
 
@@ -217,27 +227,29 @@ def rir_generate(quantity,
 
             # Plot
             plt.figure(figsize=(10,5))
-            plt.plot(t_full, rir, label='Full RIR with moderate order', alpha=0.8)
-            plt.plot(t_final, rir_final, label='Early + Late Tail', linestyle='--', alpha=0.8)
+            plt.plot(t_full, rir, label='Full RIR with moderate order', alpha=0.8, linewidth = 0.7)
+            plt.plot(t_final, rir_final, label='Early + Late Tail', alpha=0.8)
             plt.xlabel('Time [s]')
             plt.ylabel('Amplitude [dB]')
-            plt.title('Comparison of Full RIR vs Early+Late Tail')
+            plt.title('Comparison of Full RIR vs Simulated Moderate-Order Head + Exp Decay Tail')
             plt.grid(True)
             plt.legend()
             plt.show()
 
-        ### F. Export RIR
-        output_folder = output_folder
-        rir_filename = "rir_{loop}.npy"
+        ### F. Export RIR; Must to prevent overwriting what have been generated (in case this was after a crash)
+        rir_filename = f"rir_{len(os.listdir(output_folder))}.npy"
+        if not os.path.isdir(output_folder):
+            os.mkdir(output_folder)
+        np.save(os.path.join(output_folder, rir_filename), rir_final)
 
         if preview_mode:
             print("Preview Mode is On... Generating only 1 RIR!")
             break
 
-        if loop%1 == 0:
+        if (loop+1)%10 == 0:
             end_time = time.perf_counter()
             elapsed_time = (end_time - start_time) / 60
-            print(f"{loop+1} out of {quantity} RIR generated... Elapsed time: {elapsed_time:.2f} minutes")
+            print(f"{loop+1} out of {quantity} RIR generated... Elapsed time: {elapsed_time:.1f} minutes")
 
     return (None)
 
@@ -245,14 +257,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Your RIR Generator")
     parser.add_argument("--quantity", type=int, default=500, help="Number of RIRs to Generate")
     parser.add_argument("--config_file", type=str, default = "./config.yaml", help="The config yaml file to refer to")
-    parser.add_argument("--random_seed", type=int, default = 42, help="Set random seed")
-    parser.add_argument("--output_folder", type=str, default = "./", help="Set output folder")
+    parser.add_argument("--master_seed", type=int, default = 42, help="Set initial seed")
+    parser.add_argument("--output_folder", type=str, default = "./simulated_RIRs", help="Set output folder")
     parser.add_argument("--preview_mode", type = bool, default=False, help="Generate only 1 RIR, albeit with illustrative schematics if True")
 
     args = parser.parse_args()
 
     rir_generate(args.quantity,
                  args.config_file,
-                 args.random_seed,
+                 args.master_seed,
                  args.output_folder,
                  args.preview_mode)
