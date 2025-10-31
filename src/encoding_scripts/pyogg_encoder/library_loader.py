@@ -1,0 +1,155 @@
+import ctypes
+import ctypes.util
+import logging
+import os
+import platform
+import sys
+from typing import Dict
+from typing import List
+from typing import Optional
+
+_here = os.path.dirname(__file__)
+
+
+class ExternalLibraryError(Exception):
+    pass
+
+
+architecture = platform.architecture()[0]
+
+_windows_styles = ["{}", "lib{}", "lib{}_dynamic", "{}_dynamic"]
+
+_other_styles = ["{}", "lib{}"]
+
+if architecture == "32bit":
+    for arch_style in ["32bit", "32" "86", "win32", "x86", "_x86", "_32", "_win32", "_32bit"]:
+        for style in ["{}", "lib{}"]:
+            _windows_styles.append(style.format("{}" + arch_style))
+
+elif architecture == "64bit":
+    for arch_style in ["64bit", "64" "86_64", "amd64", "win_amd64", "x86_64", "_x86_64", "_64", "_amd64", "_64bit"]:
+        for style in ["{}", "lib{}"]:
+            _windows_styles.append(style.format("{}" + arch_style))
+
+run_tests = lambda lib, tests: [f(lib) for f in tests]
+
+# Get the appropriate directory for the shared libraries depending 
+# on the current platform and architecture
+platform_ = platform.system()
+lib_dir = None
+if platform_ == "Darwin":
+    lib_dir = "libs/macos"
+elif platform_ == "Windows":
+    if architecture == "32bit":
+        lib_dir = "libs/win32"
+    elif architecture == "64bit":
+        lib_dir = "libs/win_amd64"
+
+
+class Library:
+    @staticmethod
+    def load(names: Dict[str, str], paths: Optional[List[str]] = None, tests=[]) -> Optional[ctypes.CDLL]:
+        lib = InternalLibrary.load(names, tests)
+        if lib is None:
+            lib = ExternalLibrary.load(names["external"], paths, tests)
+        return lib
+
+
+class InternalLibrary:
+    @staticmethod
+    def load(names: Dict[str, str], tests) -> Optional[ctypes.CDLL]:
+        # If we do not have a library directory, give up immediately
+        if lib_dir is None:
+            return None
+
+        # Get the appropriate library filename given the platform
+        try:
+            name = names[platform_]
+        except KeyError:
+            return None
+
+        # Attempt to load the library from here
+        path = _here + "/" + lib_dir + "/" + name
+        # print(f"[FAST DEBUG] Attempting to load internal library: {path}")
+        try:
+            lib = ctypes.CDLL(path)
+            # print(f"[FAST DEBUG] SUCCESS: Loaded internal library from: {path}")
+        except OSError as e:
+            logging.exception(f"[FAST DEBUG] FAILED to load internal library from path: {path}")
+            return None
+
+        # Check that the library passes the tests
+        if tests and all(run_tests(lib, tests)):
+            return lib
+
+        # Library failed tests
+        return None
+
+
+# Cache of libraries that have already been loaded
+_loaded_libraries: Dict[str, ctypes.CDLL] = {}
+
+
+class ExternalLibrary:
+    @staticmethod
+    def load(name, paths=None, tests=[]):
+        if name in _loaded_libraries:
+            return _loaded_libraries[name]
+        if sys.platform == "win32":
+            lib = ExternalLibrary.load_windows(name, paths, tests)
+            _loaded_libraries[name] = lib
+            return lib
+        else:
+            lib = ExternalLibrary.load_other(name, paths, tests)
+            _loaded_libraries[name] = lib
+            return lib
+
+    @staticmethod
+    def load_other(name, paths=None, tests=[]):
+        os.environ["PATH"] += ";" + ";".join((os.getcwd(), _here))
+        if paths:
+            os.environ["PATH"] += ";" + ";".join(paths)
+
+        for style in _other_styles:
+            candidate = style.format(name)
+            library = ctypes.util.find_library(candidate)
+            if library:
+                # print(f"[FAST DEBUG] Found external library candidate: {library}")
+                try:
+                    lib = ctypes.CDLL(library)
+                    if tests and all(run_tests(lib, tests)):
+                        # print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
+                        return lib
+                except:
+                    logging.exception(f"[FAST DEBUG] FAILED to load external library: {library}")
+
+    @staticmethod
+    def load_windows(name, paths=None, tests=[]):
+        os.environ["PATH"] += ";" + ";".join((os.getcwd(), _here))
+        if paths:
+            os.environ["PATH"] += ";" + ";".join(paths)
+
+        not_supported = []  # libraries that were found, but are not supported
+        for style in _windows_styles:
+            candidate = style.format(name)
+            library = ctypes.util.find_library(candidate)
+            if library:
+                # print(f"[FAST DEBUG] Found external library candidate: {library}")
+                try:
+                    lib = ctypes.CDLL(library)
+                    if tests and all(run_tests(lib, tests)):
+                        # print(f"[FAST DEBUG] SUCCESS: Loaded external library: {library}")
+                        return lib
+                    not_supported.append(library)
+                except WindowsError:
+                    logging.exception(f"[FAST DEBUG] FAILED to load external library: {library}")
+                except OSError:
+                    logging.exception(f"[FAST DEBUG] FAILED to load external library: {library}")
+                    not_supported.append(library)
+
+        if not_supported:
+            raise ExternalLibraryError(
+                f"library '{name}' couldn't be loaded, because the following candidates were not supported:"
+                + ("\n{}" * len(not_supported)).format(*not_supported))
+
+        raise ExternalLibraryError(f"library '{name}' couldn't be loaded")
