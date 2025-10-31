@@ -9,4 +9,5 @@ sounddevice
 #samplerate
 mir_eval
 python-sofa
+PyYAML==6.0.3
 soxr

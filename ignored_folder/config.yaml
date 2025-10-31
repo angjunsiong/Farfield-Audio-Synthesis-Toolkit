@@ -1,0 +1,101 @@
+sampling_rate: 16000
+
+# (1) Room Dimensions
+# Refer to schematic
+room_dimensions:
+  base_length_upper: 25.0
+  base_length_lower: 15.0
+  base_width_upper: 12.0
+  base_width_lower: 8.5
+  entrance_depth_upper: 2.0
+  entrance_depth_lower: 1.0
+  entrance_length_upper: 14.0
+  entrance_length_lower: 10.0
+  radius_curve_upper: 4.0
+  radius_curve_lower: 3.0
+  height_upper: 4.0
+  height_lower: 3.0
+
+# (2) Materials for room surfaces
+## Ceiling (walls[27]): some kind of smooth, hard surface
+room_materials:
+  ceiling:
+  - "hard_surface"
+  - "smooth_brickwork_flush_pointing"
+  - "smooth_brickwork_10mm_pointing"
+  - "ceramic_tiles"
+  - "limestone_wall"
+
+## Floor (walls[26]): Looks like carpet!
+  floor:
+  - "carpet_cotton"
+  - "carpet_tufted_9.5mm"
+  - "carpet_thin"
+  - "carpet_6mm_closed_cell_foam"
+  - "carpet_6mm_open_cell_foam"
+  - "carpet_tufted_9m"
+  - "felt_5mm"
+  - "carpet_soft_10mm"
+  - "carpet_hairy"
+  - "carpet_1.35_kg_m2"
+  - "cocos_fibre_roll_29mm"
+
+# East West: Curved walls [walls[0-11], walls [13-24]] - Some cushion / paddings
+  curved_walls: 
+  - "facing_brick"
+  - "acoustical_plaster_25mm"
+  - "rockwool_50mm_80kgm3"
+  - "rockwool_50mm_40kgm3"
+  - "mineral_wool_50mm_40kgm3"
+  - "mineral_wool_50mm_70kgm3"
+  - "gypsum_board"
+  - "perforated_veneered_chipboard"
+  - "fibre_absorber_1"
+  - "fibre_absorber_2"
+
+# North: Entrance [walls[12]] - assume hard doors
+  entrance: 
+  - "wooden_door"
+  - "wood_1.6cm"
+  - "wood_16mm"
+  - "audience_floor" 
+  - "stage_floor"
+
+# South: Window wall [wall[25]] - curtains
+  curtain_wall:
+  - "curtains_cotton_0.5"
+  - "curtains_0.2"
+  - "curtains_cotton_0.33"
+  - "curtains_densely_woven"
+  - "blinds_half_open"
+  - "blinds_open"
+  - "curtains_velvet"
+  - "curtains_fabric"
+  - "curtains_fabric_folded"
+  - "curtains_glass_mat"
+  - "studio_curtains"
+
+# Scattering presents
+  scattering:
+  - "theatre_audience"
+  - "classroom_tables"
+  - "amphitheatre_steps"
+  - "rpg_skyline"
+  - "rpg_qrd"
+
+  scattering_values:
+    hard_scattering_upper: 0.1
+    hard_scattering_lower: 0.05
+    soft_scattering_upper: 0.95
+    soft_scattering_lower: 0.9
+
+# (4) Source and Mic parameters
+source:
+  source_height_upper: 1.3
+  source_height_lower: 0.9
+
+mic:
+  mic_height_upper: 0.1
+  mic_height_lower: 0.8
+  mic_p_upper: 0.8
+  mic_p_lower: 0.5
