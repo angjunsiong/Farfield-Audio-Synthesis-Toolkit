@@ -11,6 +11,7 @@ from src.noise_sizer import noise_sizer
 from src.post_convo_sizer import post_convo_sizer
 from src.ir_convolve import ir_convolve
 from src.encoding_scripts.opus import encode_opus, decode_opus
+from src.phone_lowpass import phone_augment
 
 def regenerate_dataset(log_json,
                        speech_folder = "./data/00_raw_speech/",
@@ -226,81 +227,92 @@ def regenerate_dataset(log_json,
         
 
         ## III-E: Simulating Passing of Audio through Fabric
-        # Retrieve required parameters
-        fabric_irs = log[audio_serial]["simulate_fabric"]["RIRs_used"]
-        
-        # File check
-        skip_iter = False
-        for fabric_ir in fabric_irs:
-            if not os.path.isfile(os.path.join(fabric_ir_folder, fabric_ir)):
-                print (f"{os.path.join(fabric_ir_folder, fabric_ir)} not found")
-                skip_iter = True
-        if skip_iter == True:
-            print (f"Skipping regen of {file_name}")
-            continue
+        if log[audio_serial]["simulate_fabric"] is not None:
+            # Retrieve required parameters
+            fabric_irs = log[audio_serial]["simulate_fabric"]["RIRs_used"]
+            
+            # File check
+            skip_iter = False
+            for fabric_ir in fabric_irs:
+                if not os.path.isfile(os.path.join(fabric_ir_folder, fabric_ir)):
+                    print (f"{os.path.join(fabric_ir_folder, fabric_ir)} not found")
+                    skip_iter = True
+            if skip_iter == True:
+                print (f"Skipping regen of {file_name}")
+                continue
 
-        # Convolve data with fabric IR
-        sample_data, sr, size_orig, IR_applied, _ = ir_convolve(sample_data, 
-                                                                sr,
-                                                                ir_repo=fabric_ir_folder,
-                                                                mode="specific_mix",
-                                                                mix_ir_list=fabric_irs)
+            # Convolve data with fabric IR
+            sample_data, sr, size_orig, IR_applied, _ = ir_convolve(sample_data, 
+                                                                    sr,
+                                                                    ir_repo=fabric_ir_folder,
+                                                                    mode="specific_mix",
+                                                                    mix_ir_list=fabric_irs)
 
-        # Rightsize convolved data
-        sample_data = post_convo_sizer(audio_data= sample_data, 
-                                       size_orig = size_orig, 
-                                       convo_type="fabric",
-                                       IR_applied=IR_applied)
-
-        ## III-F: Simulating Recording of Audio by Mobile Phones
-        # Retrieve required parameters
-
-        mobile_ir = log[audio_serial]["simulate_mobile"]["RIRs_used"]
-        
-        # File check
-        skip_iter = False
-        
-        for ir in mobile_ir:
-            if not os.path.isfile(os.path.join(handphone_ir_folder, ir)):
-                print (f"{os.path.join(handphone_ir_folder, ir)} not found")
-                skip_iter = True
-        if skip_iter == True:
-            print (f"Skipping regen of {file_name}")
-            continue
-
-        # Convolve data with mobile IR
-        sample_data, sr, size_orig, IR_applied, _ = ir_convolve(sample_data, 
-                                                                sr,
-                                                                ir_repo=handphone_ir_folder,
-                                                                mode="specific_mix",
-                                                                mix_ir_list=mobile_ir)
-
-        # Rightsize convolved data
-        sample_data = post_convo_sizer(audio_data= sample_data, 
-                                       size_orig = size_orig, 
-                                       convo_type="mobile",
-                                       IR_applied=IR_applied)
+            # Rightsize convolved data
+            sample_data = post_convo_sizer(audio_data= sample_data, 
+                                        size_orig = size_orig, 
+                                        convo_type="fabric",
+                                        IR_applied=IR_applied)
 
         ## III-F: Simulating Recording of Audio by Mobile Phones
-        # Retrieve required parameters
-        codec = log[audio_serial]["simulate_codec"]
-        file_name= log[audio_serial]["file_name"]
+        
+        if log[audio_serial]["simulate_mobile"] is not None:
+            # Retrieve required parameters
+            mobile_ir = log[audio_serial]["simulate_mobile"]["RIRs_used"]
+            
+            # File check
+            skip_iter = False
+            
+            for ir in mobile_ir:
+                if not os.path.isfile(os.path.join(handphone_ir_folder, ir)):
+                    print (f"{os.path.join(handphone_ir_folder, ir)} not found")
+                    skip_iter = True
+            if skip_iter == True:
+                print (f"Skipping regen of {file_name}")
+                continue
 
-        if codec == "opus":
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                temp_file_path = os.path.join(tmpdirname, "sample_audio.wav")
-                torchaudio.save(temp_file_path, sample_data, sample_rate=sr, encoding="PCM_S", bits_per_sample=16)
-                ## Encode and Decode audio
-                opus_encoded_path = encode_opus(wav_path = temp_file_path,
-                                                tmp_folder=tmpdirname)
-                opus_decoded_path = decode_opus(opus_encoded_path=opus_encoded_path,
-                                                output_folder="./output/regenerated_samples",
-                                                count=str(audio_serial),
-                                                decoded_path=file_name)            
+            # Convolve data with mobile IR
+            sample_data, sr, size_orig, IR_applied, _ = ir_convolve(sample_data, 
+                                                                    sr,
+                                                                    ir_repo=handphone_ir_folder,
+                                                                    mode="specific_mix",
+                                                                    mix_ir_list=mobile_ir)
 
-        else:
-            print("codec not supported")
-            continue
+            # Rightsize convolved data
+            sample_data = post_convo_sizer(audio_data= sample_data, 
+                                        size_orig = size_orig, 
+                                        convo_type="mobile",
+                                        IR_applied=IR_applied)
+
+        ## III-G: Simulating Recording of Audio by Mobile Phones
+        if log[audio_serial]["simulate_codec"] is not None: 
+            # Retrieve required parameters
+            codec = log[audio_serial]["simulate_codec"]
+            file_name= log[audio_serial]["file_name"]
+
+            if codec == "opus":
+                with tempfile.TemporaryDirectory() as tmpdirname:
+                    temp_file_path = os.path.join(tmpdirname, "sample_audio.wav")
+                    torchaudio.save(temp_file_path, sample_data, sample_rate=sr, encoding="PCM_S", bits_per_sample=16)
+                    ## Encode and Decode audio
+                    opus_encoded_path = encode_opus(wav_path = temp_file_path,
+                                                    tmp_folder=tmpdirname)
+                    opus_decoded_path = decode_opus(opus_encoded_path=opus_encoded_path,
+                                                    output_folder="./output/regenerated_samples",
+                                                    count=str(audio_serial),
+                                                    decoded_path=file_name)            
+
+            else:
+                print("codec not supported")
+                continue
+
+        ## III: Simulating phone with simple bandpass filter
+        # Note this is mutually exclusive with III-E,F,G
+        if log[audio_serial]["phone_lowpass"] is not None:
+            sample_data, sr = phone_augment(sample_data, sr)
+            # Export file
+            torchaudio.save(os.path.join("./output/regenerated_samples",f"phone_lowpass_sample_{audio_serial}.wav"), 
+                            sample_data, sr, encoding="PCM_S", bits_per_sample=16)
 
         if (audio_serial+1)%100==0: 
             print(f"{audio_serial+1} files generated!")
