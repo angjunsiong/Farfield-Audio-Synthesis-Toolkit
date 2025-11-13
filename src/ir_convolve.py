@@ -6,6 +6,10 @@
 # (1) Room IRs: acosustic information due to reverb and adsorption/attenuation over room distance
 # (2) Fabric IRs: acosutic information when passing audio through different fabrics
 # (3) HP Mic IRs: acoustic information when capturing audio with mobile phones 
+
+
+##### nitpick but ir_repo should prolly be called ir_dir
+# docstring for specific_ir_path looks weird prolly should go regen docstrings
                                                                                  
 import numpy as np
 from scipy import signal

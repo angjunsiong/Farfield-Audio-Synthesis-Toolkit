@@ -3,6 +3,10 @@
 # i.e. before & after passing through a medium, such as a fabric
 # Note to self: This was actually 88% vibe-coded!
 
+
+#### This should probably be in the same py as ir_convolve
+# Purpose of this function? Isn't it mathematically equivalent to just multiplying by room RIR?
+
 import numpy as np
 from scipy.fft import fft, fftfreq
 import librosa
