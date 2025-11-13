@@ -8,6 +8,13 @@
 # It serves to enhance the data augmentation process for background noises by introducing echo and tempo change
 # Note: The range of the parameters were determined using my own hearing tests
 
+#### TO-DO: Not sure if it makes sense to have an echo and a RIR. 
+# Either we remove the echos function or we allow a way to turn off echos? 
+# We should be adding a seed for all random ng. Also go get the LLM to regenerate docstrings it looks outdated
+# Thoughts: Might be good to just merge variables and overload it to abuse Python arguments type flexibility
+# E.g. tempo_range = None if no tempo change intended. = (float1, float2) if intended
+# Also, why is pitch shift quantised into int? Part of the algo?
+
 import random
 import pyrubberband
 import numpy as np
@@ -17,7 +24,7 @@ from scipy import signal
 def audio_effector(audio_wav,
                    sr=16000,
                    echo = False, 
-                   tempo_change = False,
+                   tempo_change = False, # Why is the docs tempo and not tempo_change
                    pitch_shift=False,
                    low_pass = False,
                    no_of_echos_range = (0,3),

@@ -1,3 +1,7 @@
+###  This should be in the same py as bulk_generation_simple
+# Also it makes more sense to simply implement bulk_generation_simple as a call on bulk_generation with possibly fixed params?
+
+
 import random
 import os
 import tempfile

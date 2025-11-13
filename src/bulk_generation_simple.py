@@ -1,3 +1,7 @@
+#### Add some docstrings if this is not a util function
+# Add rng seed
+# Should probably allow for log output dir/name to be customised
+
 import random
 import os
 import tempfile

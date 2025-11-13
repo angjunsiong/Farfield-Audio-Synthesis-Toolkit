@@ -1,3 +1,5 @@
+##### Should probably add fig.show() or plt.show() so that multiple can be plotted in the same cell
+
 import os
 
 import librosa
