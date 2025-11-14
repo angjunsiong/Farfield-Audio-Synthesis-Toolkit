@@ -7,16 +7,50 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchaudio
+from typing import Optional, Literal
 
 
-def plot_waveform(waveform, sample_rate, title="Waveform", xlim=None):
-    waveform = waveform.numpy()
+def plot_waveform(waveform: torch.Tensor | np.ndarray, sample_rate: int, title: str = "Waveform", xlim: Optional[tuple] = None):
+    """
+    Plots a waveform tensor.
 
+    Handles both mono (1D) and multi-channel (2D) tensors.
+
+    Args:
+        waveform (torch.Tensor | np.ndarray): The audio waveform. 
+            Expected shapes:
+            - (num_frames,): Mono audio
+            - (num_channels, num_frames): Multi-channel audio
+        sample_rate (int): The sample rate of the audio.
+        title (str, optional): The title for the plot. Defaults to "Waveform".
+        xlim (tuple, optional): A (min, max) tuple to set the x-axis limits. Defaults to None.
+    """
+    
+    # --- 1. Waveform Checking ---
+    if isinstance(waveform, torch.Tensor):
+        waveform = waveform.numpy()
+    
+    if not isinstance(waveform, np.ndarray):
+        raise TypeError(f"Input must be a torch.Tensor or np.ndarray, but got {type(waveform)}")
+
+    if waveform.ndim == 1:
+        waveform = waveform.reshape(1, -1) # Mono case: unsqueeze to (1, num_frames)
+    elif waveform.ndim > 2:
+        # Unsupported case (e.g., batch)
+        raise ValueError(
+            f"Waveform must be 1D (num_frames) or 2D (num_channels, num_frames), "
+            f"but got shape {waveform.shape}"
+        )
+    
+    # --- 2. Data Preparation ---
     num_channels, num_frames = waveform.shape
-    time_axis = torch.arange(0, num_frames) / sample_rate
+    time_axis = np.arange(0, num_frames) / sample_rate
 
-    figure, axes = plt.subplots(num_channels, 1)
+    # --- 3. Plotting ---
+    figure, axes = plt.subplots(num_channels, 1, figsize=(10, 2 * num_channels), sharex=True)
+    
     if num_channels == 1:
+        # Ensure 'axes' is always iterable (a list)
         axes = [axes]
 
     for c in range(num_channels):
@@ -26,76 +60,141 @@ def plot_waveform(waveform, sample_rate, title="Waveform", xlim=None):
             axes[c].set_ylabel(f"Channel {c + 1}")
         if xlim:
             axes[c].set_xlim(xlim)
+            
+    # Add a shared x-axis label
+    axes[-1].set_xlabel("Time (s)")
+    
     figure.suptitle(title)
+    
+    # Add tight_layout for better spacing
+    figure.tight_layout()
+    
+    # --- 4. Display Plot ---
+    plt.show()
 
 
-def plot_spectrogram(audio_path,
-                     xlim=None,
-                     threshold=False,
-                     threshold_factor=3,
-                     # hop_length defaulted to 32 › default value will make spec very low in time-resolution
-                     hop_length=32):
-    # load audio, convert to freq domain
-    waveform, sampling_rate = librosa.load(audio_path, sr=None)
-    spec_wave = np.abs(librosa.stft(waveform, hop_length=hop_length))
-
-    # prepare plot
-    fig, ax = plt.subplots()
-
-    # checks if threshold is to be applied ; apply threshold here
-    if threshold == True:
-        spec_wave[spec_wave < np.mean(spec_wave) * threshold_factor] = 0
-
-    # publish plot
-    S_db = librosa.amplitude_to_db(np.abs(spec_wave), ref=np.max)
-    img = librosa.display.specshow(S_db,
-                                   sr=sampling_rate,
-                                   x_axis="s",
-                                   y_axis="linear",
-                                   ax=ax,
-                                   hop_length=hop_length)
-    ax.set(title=f"Spectrogram for {audio_path.split('/')[-1]}")
-    ax.set_xlim(xlim)
-    fig.colorbar(img, ax=ax, format="%+2.f dB")
-
-
-def load_audio_with_pytorch(
-        wav_path: str | os.PathLike,
-        target_freq: int | None = 16000,
-) -> tuple[torch.Tensor, int]:
-    """Loads a WAV file and optionally resamples it to a target frequency.
-
-    This function loads an audio file into a PyTorch tensor with the standard
-    [channels, time] format.
-
-    :param wav_path: The path to the WAV audio file.
-    :param target_freq: The desired sampling rate. If the audio's native rate
-                        is different, it will be resampled. If set to None,
-                        no resampling is performed.
-    :returns: A tuple containing the audio waveform and its sampling rate.
+def plot_spectrogram(
+    waveform: torch.Tensor | np.ndarray,
+    sample_rate: int,
+    title: str = "Spectrogram",
+    n_fft: int = 2048,
+    hop_length: int = 512,
+    win_length: Optional[int] = None,
+    window: str = 'hann',
+    to_db: bool = True,
+    y_axis: Literal['linear', 'log'] = 'log',
+    xlim: Optional[tuple] = None
+):
     """
+    Plots a spectrogram for a given waveform.
 
-    # Check if the file exists
-    if not os.path.exists(wav_path):
-        raise FileNotFoundError(f"Audio file not found: {wav_path}")
+    Handles both mono (1D) and multi-channel (2D) inputs, which can be
+    either torch.Tensors or np.ndarrays. Multi-channel inputs are plotted
+    as separate subplots.
 
-    # Load the audio. torchaudio.load defaults to the [channels, time] format.
-    waveform, sr = torchaudio.load(wav_path)
-    print(f"Audio '{wav_path}' loaded! Native Sampling Rate: {sr}Hz; Shape: {waveform.shape}")
+    Args:
+        waveform (torch.Tensor | np.ndarray): The audio waveform.
+            Expected shapes:
+            - (num_frames,): Mono audio
+            - (num_channels, num_frames): Multi-channel audio
+        sample_rate (int): The sample rate of the audio (e.g., 44100).
+        title (str, optional): The title for the overall figure. Defaults to "Spectrogram".
+        n_fft (int, optional): The number of FFT components. Defaults to 2048.
+        hop_length (int, optional): The number of samples between STFT frames. Defaults to 512.
+        win_length (int, optional): Window length. Defaults to n_fft if None.
+        window (str, optional): The window function (e.g., 'hann'). Defaults to 'hann'.
+        to_db (bool, optional): Whether to convert amplitude to decibels. Defaults to True.
+        y_axis (Literal['linear', 'log'], optional): The frequency axis scale. Defaults to 'log'.
+        xlim (Optional[tuple], optional): A (min, max) tuple in seconds to set the x-axis (time) limits. Defaults to None.
+    """
+    
+    # --- 1. Input Handling & Dimension Checking ---
+    
+    # Convert to numpy if it's a torch tensor
+    if isinstance(waveform, torch.Tensor):
+        waveform = waveform.numpy()
 
-    # Resample only if a target frequency is specified and it differs from the source.
-    if target_freq not in (None, sr):
-        print(f"Resampling audio from {sr}Hz to {target_freq}Hz...")
-        try:
-            # Use torchaudio's resample transform for high-quality resampling.
-            resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_freq,
-                                                       resampling_method="sinc_interp_kaiser")
-            waveform = resampler(waveform)
-            # Update the sample rate to the new target frequency
-            sr = target_freq
-            print(f"Audio resampled. New shape: {waveform.shape}")
-        except Exception as e:
-            print(f"Error during resampling: {e}")
-            raise
+    if not isinstance(waveform, np.ndarray):
+        raise TypeError(f"Input must be a torch.Tensor or np.ndarray, but got {type(waveform)}")
 
-    return waveform, sr
+    # Standardize dimensions to 2D (num_channels, num_frames)
+    if waveform.ndim == 1:
+        # Mono case: reshape to (1, num_frames)
+        waveform = waveform.reshape(1, -1)
+    elif waveform.ndim > 2:
+        # Unsupported case (e.g., batch)
+        raise ValueError(
+            f"Waveform must be 1D (num_frames) or 2D (num_channels, num_frames), "
+            f"but got shape {waveform.shape}"
+        )
+    
+    num_channels, num_frames = waveform.shape
+
+    # --- 2. Plotting Setup ---
+    # Create subplots for each channel
+    # Note: sharex is True, so xlim will apply to all subplots
+    figure, axes = plt.subplots(num_channels, 1, figsize=(10, 4 * num_channels), sharex=True)
+    
+    if num_channels == 1:
+        # Ensure 'axes' is always iterable (a list)
+        axes = [axes]
+
+    # --- 3. STFT and Plotting Loop ---
+    for c in range(num_channels):
+        ax = axes[c]
+        
+        # Get the waveform for the current channel
+        channel_wave = waveform[c]
+
+        # 3a. Calculate STFT
+        # librosa.stft returns a complex-valued matrix
+        S_complex = librosa.stft(
+            channel_wave,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length,
+            window=window
+        )
+        
+        # 3b. Get magnitude
+        S_mag = np.abs(S_complex)
+        
+        # 3c. Convert to decibels (if requested)
+        plot_data = S_mag
+        colorbar_format = None
+        
+        if to_db:
+            # librosa.amplitude_to_db is a safe way to convert
+            plot_data = librosa.amplitude_to_db(S_mag, ref=np.max)
+            colorbar_format = '%+2.0f dB'
+
+        # 3d. Plot the spectrogram using librosa.display.specshow
+        # This automatically handles axis labels (Time, Hz)
+        img = librosa.display.specshow(
+            plot_data,
+            ax=ax,
+            sr=sample_rate,
+            hop_length=hop_length,
+            x_axis='time',
+            y_axis=y_axis
+        )
+        
+        # 3e. Add labels and colorbar
+        if num_channels > 1:
+            ax.set_ylabel(f"Channel {c + 1}")
+            
+        figure.colorbar(img, ax=ax, format=colorbar_format)
+
+    # --- 4. Final Touches ---
+    
+    # Set xlim if provided. Since sharex=True, this applies to all subplots.
+    if xlim:
+        axes[0].set_xlim(xlim) # Set on one axis, it will apply to all
+
+    figure.suptitle(title)
+    
+    # Use tight_layout for better spacing
+    figure.tight_layout()
+    
+    # Display the plot
+    plt.show()
