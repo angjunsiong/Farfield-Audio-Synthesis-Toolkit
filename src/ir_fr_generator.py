@@ -185,6 +185,13 @@ For info; fabrics used in experiments
             # but we are not using O directly to compensate for the drop in amplitude due to the fabric
             # This is calibrated using hearing tests (Where, at unity gain, low frequencies were observed to be too noisy
             # The impact is likely to be low since this ia the frequency band that will be muddled with noise in practice
+            # TODO: there are probably other ways to fix this artifact
+            # like we could use a high pass (butter) filter below instead of squashing everything down to 0.45
+            # impulse_response_cleaned = np.real(np.fft.ifft(freq_resp_cleaned))
+            # if suppress_low_freq_noise:
+            #     sos = butter(4, 150, 'hp', fs=target_sr, output='sos')
+            #     impulse_response_cleaned = sosfiltfilt(sos, impulse_response_cleaned)
+            # or we could use a dynamic `lambda_reg` above based on the reference signal strength
 
             if suppress_low_freq_noise:
                 freq_to_suppress = 400
