@@ -170,3 +170,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+ignored_folder/simulated_RIRs/*.npy
+ignored_folder/simulated_RIRs.zip
+
