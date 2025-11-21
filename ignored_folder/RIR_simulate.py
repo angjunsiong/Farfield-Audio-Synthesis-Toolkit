@@ -214,6 +214,8 @@ def rir_generate(quantity,
         
         tail_length = int(rir_total_duration * room.fs - rir_simulated_truncated_length)
         time_tail = np.arange(tail_length) / room.fs
+        # TODO: validate that we really only want to scale based on the last sample value
+        # you might want to average (maybe rms) the last few percent of the array instead
         late_tail = np.abs(rir_simulated_truncated[-1]) * np.exp(-6.91 * (time_tail + rir_simulated_duration/room.fs) / rir_total_duration) # note scaling
         
         # Step 3: Concatenante RIR segments

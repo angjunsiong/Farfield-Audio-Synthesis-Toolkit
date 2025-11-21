@@ -66,6 +66,7 @@ def ir_convolve(audio_data,
         for i in range(no_of_ir):  # ??? is this ok
             # hmmmm as you suspect i'm not sure if this is the correct way to interpolate RIRs
             # might need to do some fft based merging instead
+            # TODO: look into the method in ir_interpolation.py instead
             sampled_ir = random.choice(os.listdir(ir_repo))
             # Log parameters
             paras["RIRs_used"].append(sampled_ir)

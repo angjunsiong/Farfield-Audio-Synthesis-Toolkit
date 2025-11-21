@@ -70,6 +70,7 @@ def noise_sizer(audio_data_1,
         padding_front = (pad_size, 0)
         padded_audio_data_2 = F.pad(audio_data_2, pad=padding_front, mode="constant", value=0)
 
+        # TODO: ensure that padding_front < len(audio_data), otherwise you've deleted the entire noise clip
         # II. Adjust size of noise-data to match audio data
         ## If noise data ends up longer than audio data, truncate
         if len(padded_audio_data_2[0]) > len(audio_data_1[0]):

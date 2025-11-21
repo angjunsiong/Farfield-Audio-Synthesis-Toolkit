@@ -188,7 +188,7 @@ def time_aligner(reference_path="./data/fabric_experiment/references/0Clean_0deg
         samples_lag = int(time_lag_seconds * sr1)
 
         ## Align audio: This is achieved by removing the front part of the "lagging" audio
-        if time_lag_hops >= 0:
+        if time_lag_hops >= 0:  # TODO: you're checking only the last created item in a list, which might be a bug
             aligned_data_fabric = data_fabric[samples_lag:]  # removes empty front part
         else:
             print("WARNING: You are seemingly removing non-empty portion of the audio you are trying to align")

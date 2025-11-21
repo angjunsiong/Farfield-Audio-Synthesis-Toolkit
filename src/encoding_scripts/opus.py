@@ -140,7 +140,7 @@ def encode_opus(wav_path: str, tmp_folder: str) -> str:
     # use libopus (via pyogg) instead
     wav_to_opus(wav_input_path=wav_path,
                 opus_output_path=encoded_path,
-                bitrate=24000,
+                bitrate=24000,  # note that this uses a much lower bitrate than the opus default of 64000
                 overwrite=True)
     return encoded_path
 
