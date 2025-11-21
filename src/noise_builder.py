@@ -19,7 +19,7 @@ import torch
 import torchaudio.functional as F
 
 from src.audio_effects_new import audio_effector
-from src.helper_functions import load_audio_with_pytorch
+from src.utils.loader import load_audio_with_pytorch
 from src.noise_sizer import noise_sizer
 
 

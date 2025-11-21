@@ -1,7 +1,9 @@
+#### This is just a script for testing that the functions work as intended. 
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from helper_functions import plot_waveform, plot_spectrogram
+from utils.plot import plot_waveform, plot_spectrogram
 
 SAMPLE_RATE = 44100
 duration = 1

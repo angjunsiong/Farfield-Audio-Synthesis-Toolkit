@@ -6,12 +6,13 @@ import json
 import random
 import tempfile
 from datetime import datetime
+import torchaudio
 
 from src.audio_effects_new import audio_effector
 from src.audio_stacker import audio_noise_stack
 from src.encoding_scripts.opus import decode_opus
 from src.encoding_scripts.opus import encode_opus
-from src.helper_functions import *
+from src.utils.loader import load_audio_with_pytorch
 from src.ir_convolve import ir_convolve
 from src.noise_builder import noise_builder
 from src.post_convo_sizer import post_convo_sizer
