@@ -103,6 +103,8 @@ def ir_convolve(audio_data,
     ## II. Convolve audio with ir
     # Only use full to capture every bit of IR details
     size_orig = len(torch.squeeze(audio_data).numpy())
+    # TODO: torch.squeeze returns different array shapes for mono and stereo audio
+    # unclear whether the input audio is expected to be mono, we should probably document this
     convolved_audio_data = signal.convolve(torch.squeeze(audio_data).numpy(), chosen_ir, mode="full")
 
     # Normalise data as it will become much softer

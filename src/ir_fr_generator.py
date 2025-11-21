@@ -189,6 +189,7 @@ For info; fabrics used in experiments
             if suppress_low_freq_noise:
                 freq_to_suppress = 400
                 frequency_per_bin = target_sr / N_downsampled
+                # TODO: did you mean `*=` (make it smaller) instead of `=` (also deletes all complex phase)
                 freq_resp_cleaned[0:int(np.ceil(freq_to_suppress / frequency_per_bin))] = 0.45
 
             # V. Perform inverse-FFT (and take real part) to get impulse response (in time domain)
