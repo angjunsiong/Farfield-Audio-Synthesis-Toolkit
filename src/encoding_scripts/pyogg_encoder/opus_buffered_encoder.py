@@ -203,9 +203,7 @@ class OpusBufferedEncoder(OpusEncoder):
                     # ctypes array copies the array.  To avoid the
                     # copy we use memoryview see
                     # https://mattgwwalker.wordpress.com/2020/12/12/python-ctypes-slicing/
-                    frame_data = memoryview(pcm_bytes)[
-                                 pcm_index:pcm_index + self._frame_size_bytes
-                                 ]
+                    frame_data = memoryview(pcm_bytes)[pcm_index:pcm_index + self._frame_size_bytes]
 
                     # Update the PCM index
                     pcm_index += self._frame_size_bytes

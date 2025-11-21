@@ -7,7 +7,7 @@ but ideally we stick to torch transforms and keep things on gpu
 """
 
 import logging
-import numpy as np
+
 import pyrubberband
 import torch
 

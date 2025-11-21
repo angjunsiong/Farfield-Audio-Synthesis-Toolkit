@@ -34,11 +34,11 @@
 import numpy as np
 import torch
 
-def post_convo_sizer(audio_data, 
-                     size_orig, # Fed in from previous synthesis step
-                     convo_type, # "room", "mobile", or "fabric",
-                     IR_applied = None):
 
+def post_convo_sizer(audio_data,
+                     size_orig,  # Fed in from previous synthesis step
+                     convo_type,  # "room", "mobile", or "fabric",
+                     IR_applied=None):
     """
     Arguments:
     - torch tensor  audio_data  : The convolved audio data, to be correct-sized
@@ -69,9 +69,9 @@ def post_convo_sizer(audio_data,
 
         # if audio_data ends up being shorter than original audio, pad with zeros
         else:
-            audio_data = np.pad(audio_data, 
-                                (0,size_orig-len(audio_data)), 
-                                mode = "constant", 
+            audio_data = np.pad(audio_data,
+                                (0, size_orig - len(audio_data)),
+                                mode="constant",
                                 constant_values=0)
 
     ## Return audio to original size directly if convolving with fabric IR
@@ -80,8 +80,8 @@ def post_convo_sizer(audio_data,
 
     else:
         raise ValueError("please input a correct convo_type")
-    
+
     ## Repack numpy array into a torch tensor
     audio_data = torch.from_numpy(np.expand_dims(audio_data, axis=0))
-    
+
     return audio_data

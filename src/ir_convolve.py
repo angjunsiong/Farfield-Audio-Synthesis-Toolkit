@@ -10,20 +10,22 @@
 
 ##### nitpick but ir_repo should prolly be called ir_dir
 # docstring for specific_ir_path looks weird prolly should go regen docstrings
-                                                                                 
-import numpy as np
-from scipy import signal
-import random
-import torch
+
 import os
+import random
+
+import numpy as np
+import torch
+from scipy import signal
+
 
 def ir_convolve(audio_data,
                 sr,
-                mode = "random_mix", #random_mix, random_single, specific_mix, or specific
-                ir_repo = None,
-                no_of_ir = 4, # 10C4 for fabric, 18C4 for mobile: Ensure richness of IR samples
-                mix_ir_list = None,
-                specific_ir_path = None):
+                mode="random_mix",  # random_mix, random_single, specific_mix, or specific
+                ir_repo=None,
+                no_of_ir=4,  # 10C4 for fabric, 18C4 for mobile: Ensure richness of IR samples
+                mix_ir_list=None,
+                specific_ir_path=None):
     """
     Arguments:
     - torch tensor  audio_data  : The audio data to be convolved
@@ -47,21 +49,21 @@ def ir_convolve(audio_data,
     paras = {}
 
     # Check audio: Check sampling rates (this function is built to use 16kHz IRs)
-    if sr !=16000:
-        raise ValueError ("Your Sampling Rate is not 16000kHz, which is what the IRs were built on.")
+    if sr != 16000:
+        raise ValueError("Your Sampling Rate is not 16000kHz, which is what the IRs were built on.")
 
     ## I. Calculate IRs based on the diferent modes
     # Log parameters
     paras["mode"] = mode
-    paras["RIRs_used"]=[]
+    paras["RIRs_used"] = []
 
     if mode == "random_mix":
-        if not isinstance (no_of_ir, int):
+        if not isinstance(no_of_ir, int):
             raise ValueError("Please indicate a valid no_of_ir (use integers)")
         ## Choose no_of_irs in ir_repo and average them
-        chosen_ir= np.zeros_like(np.load(os.path.join(ir_repo, random.choice(os.listdir(ir_repo)))))
+        chosen_ir = np.zeros_like(np.load(os.path.join(ir_repo, random.choice(os.listdir(ir_repo)))))
 
-        for i in range(no_of_ir): # ??? is this ok
+        for i in range(no_of_ir):  # ??? is this ok
             # hmmmm as you suspect i'm not sure if this is the correct way to interpolate RIRs
             # might need to do some fft based merging instead
             sampled_ir = random.choice(os.listdir(ir_repo))
@@ -69,13 +71,13 @@ def ir_convolve(audio_data,
             paras["RIRs_used"].append(sampled_ir)
 
             chosen_ir += np.load(os.path.join(ir_repo, sampled_ir))
-        
+
         chosen_ir = chosen_ir / no_of_ir
-            
+
     elif mode == "random_single":
         sampled_ir = random.choice(os.listdir(ir_repo))
         chosen_ir = np.load(os.path.join(ir_repo, sampled_ir))
-        
+
         # Log parameters
         paras["RIRs_used"].append(sampled_ir)
 
@@ -87,11 +89,11 @@ def ir_convolve(audio_data,
                 mix_ir = mix_ir + np.load(os.path.join(ir_repo, mix_ir_list[i]))
         # Average out ir
         chosen_ir = mix_ir / len(mix_ir_list)
-        #print(chosen_ir)
+        # print(chosen_ir)
 
     elif mode == "specific":
         chosen_ir = np.load(specific_ir_path)
-        
+
         # Log parameters
         paras["RIRs_used"].append(chosen_ir)
 
@@ -108,9 +110,9 @@ def ir_convolve(audio_data,
     if max_value > 0:
         # TODO: softer audio is an intended effect of rir convolution, is increasing the gain the right thing to do?
         # unless there's clipping of some sort, maybe we shouldn't normalize it up to 100%
-        convolved_audio_data = convolved_audio_data/max_value
+        convolved_audio_data = convolved_audio_data / max_value
 
     ## Repack into audio_data format as per pytorch
     convolved_audio_data = torch.from_numpy(convolved_audio_data)
-    
+
     return convolved_audio_data, sr, size_orig, chosen_ir, paras

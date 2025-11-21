@@ -1,9 +1,9 @@
 ## Materials obtained from public workshop with a simplified mean to simulate phone audio
 
-import torchaudio.transforms as T
-from scipy import signal
 import numpy as np
 import torch
+from scipy import signal
+
 
 # --- Utility: normalize audio for listening without clipping ---
 def peak_normalize(x, peak=0.99):
@@ -14,15 +14,18 @@ def peak_normalize(x, peak=0.99):
         m = np.max(np.abs(x)) + 1e-12
         return (x / m * peak).astype(np.float32)
 
+
 def apply_zero_phase_filter(b, a, x):
     # filtfilt minimizes phase distortion — great for offline processing / preprocessing
     return signal.filtfilt(b, a, x).astype(np.float32)
+
 
 def design_butter_bandpass(low_hz, high_hz, sr, order=6):
     nyq = 0.5 * sr
     Wn = [low_hz / nyq, high_hz / nyq]
     b, a = signal.butter(order, Wn, btype="bandpass", analog=False)
     return b, a
+
 
 def phone_augment(audio, sr):
     """

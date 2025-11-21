@@ -16,10 +16,12 @@
 # Also, why is pitch shift quantised into int? Part of the algo?
 
 import random
-import pyrubberband
+
 import numpy as np
+import pyrubberband
 import torch
 from scipy import signal
+
 
 def audio_effector(audio_wav,
                    sr=16000,
@@ -61,7 +63,6 @@ def audio_effector(audio_wav,
     - dict          parameters  
     """
 
-
     # convert to 1-D (transposed) numpy array if wav audio is not yet in numpy; ensures compatibility with all functions
     ## We have to do this because pyrubberband is designed to worked with soundfile, which opens audio as a 1-D numpy array!
     ## On the other hand torchaudio opens as a 2-D tensor (data, channel#) or (channel#, data) 
@@ -88,7 +89,8 @@ def audio_effector(audio_wav,
         # sort delays (in descending order) and decays (in descending order) to get more realistic echos
         # ??? !!! was using randint earlier to get the milliseconds in delay
         if list_of_delays is None:
-            list_of_delays = [(random.uniform(echo_delays_range[0], echo_delays_range[1])*(i+1)/1000) for i in range (echo_counter)]
+            list_of_delays = [(random.uniform(echo_delays_range[0], echo_delays_range[1]) * (i + 1) / 1000) for i in
+                              range(echo_counter)]
             list_of_delays.sort()
             list_of_decays = [random.uniform(echo_decays_range[0], echo_decays_range[1]) for i in range(echo_counter)]
             list_of_decays.sort()
@@ -151,6 +153,7 @@ def audio_effector(audio_wav,
 
     return audio_wav, sr, paras
 
+
 def echo_generator(wav_data, sr, delay, decay):
     # Initialise wave file
     delay_samples = int(delay * sr)
@@ -158,7 +161,7 @@ def echo_generator(wav_data, sr, delay, decay):
 
     # cater for situations where delay is longer than the audio itself
     # this will otherwise create an indexing error
-    if delay_samples < len(wav_data) :
+    if delay_samples < len(wav_data):
         echo_data[delay_samples:] = wav_data[:-delay_samples] * decay
 
     return echo_data

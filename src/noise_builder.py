@@ -11,35 +11,36 @@
 # >0db means SNR > 1, which means P_signal > P_noise
 # Where P is average power
 
-import random
-import os
-import numpy as np
-import torch
 import copy
+import os
+import random
+
+import torch
 import torchaudio.functional as F
-from src.helper_functions import load_audio_with_pytorch
+
 from src.audio_effects_new import audio_effector
+from src.helper_functions import load_audio_with_pytorch
 from src.noise_sizer import noise_sizer
 
-def noise_builder (reference_audio_data,
-                   audio_repo,
-                   sr = 16000,
-                   no_of_audio = 1,
-                   NNR_db_range = (-5,5),
-                   echo = False,
-                   tempo_change = False,
-                   pitch_shift= False,
-                   low_pass = False,
-                   no_of_echos_range = (0,3),
-                   echo_delays_range = (50, 150),
-                   echo_decays_range = (0.1, 0.2),
-                   tempo_range = (0.8,1.2),
-                   pitch_shift_range = (-4,4),
-                   low_pass_order = (2,5),
-                   low_pass_cutoff = (4000, 8000),
-                   mode = "stationary"
-                   ):
 
+def noise_builder(reference_audio_data,
+                  audio_repo,
+                  sr=16000,
+                  no_of_audio=1,
+                  NNR_db_range=(-5, 5),
+                  echo=False,
+                  tempo_change=False,
+                  pitch_shift=False,
+                  low_pass=False,
+                  no_of_echos_range=(0, 3),
+                  echo_delays_range=(50, 150),
+                  echo_decays_range=(0.1, 0.2),
+                  tempo_range=(0.8, 1.2),
+                  pitch_shift_range=(-4, 4),
+                  low_pass_order=(2, 5),
+                  low_pass_cutoff=(4000, 8000),
+                  mode="stationary"
+                  ):
     """
     Randomly selects a certain quantity of audio files from a designated folder 
     and superimpose them on top on one another
@@ -87,18 +88,18 @@ def noise_builder (reference_audio_data,
 
     ## Prepare output data in the shape of reference_audio_data
     noise_stack_data = torch.zeros_like(reference_audio_data) + 1e-14
-    
+
     ## I. Return zero array of same size with reference_audio_data if no_of_audio = 0
     if no_of_audio == 0:
         return noise_stack_data, sr, noise_paras_dict
-    
+
     ## II. If no_of_audio >= 1; Return data read from randomly-chosen wav file (after applying effect and/or correct-sizing)
     audio_counter = no_of_audio
-    
+
     while audio_counter >= 1:
         # Initialise dict of noise parameters
-        noise_paras = {"noise_name": None,
-                       "effects": None, 
+        noise_paras = {"noise_name":         None,
+                       "effects":            None,
                        "noise_to_stack_NNR": None}
 
         # Build noise
@@ -110,25 +111,25 @@ def noise_builder (reference_audio_data,
             noise = random.choice(os.listdir(audio_repo))
         noise_path = os.path.join(audio_repo, noise)
         noise_data, sr_noise = load_audio_with_pytorch(noise_path)
-    
+
         # Add sound effects
         noise_data, sr_noise, paras = audio_effector(noise_data, sr_noise,
-                                                     echo = echo,
-                                                     tempo_change = tempo_change,
-                                                     pitch_shift = pitch_shift,
-                                                     low_pass = low_pass,
-                                                     no_of_echos_range = no_of_echos_range,
-                                                     echo_delays_range = echo_delays_range,
-                                                     echo_decays_range = echo_decays_range,
-                                                     tempo_range = tempo_range,
-                                                     pitch_shift_range = pitch_shift_range,
-                                                     low_pass_order = low_pass_order,
-                                                     low_pass_cutoff = low_pass_cutoff
+                                                     echo=echo,
+                                                     tempo_change=tempo_change,
+                                                     pitch_shift=pitch_shift,
+                                                     low_pass=low_pass,
+                                                     no_of_echos_range=no_of_echos_range,
+                                                     echo_delays_range=echo_delays_range,
+                                                     echo_decays_range=echo_decays_range,
+                                                     tempo_range=tempo_range,
+                                                     pitch_shift_range=pitch_shift_range,
+                                                     low_pass_order=low_pass_order,
+                                                     low_pass_cutoff=low_pass_cutoff
                                                      )
-        
+
         # Size data to match that of reference audio
         noise_data, pad_size = noise_sizer(reference_audio_data, noise_data, mode=mode)
-        
+
         # Log parameters
         noise_paras["noise_name"] = noise
         noise_paras["effects"] = paras
@@ -136,33 +137,33 @@ def noise_builder (reference_audio_data,
 
         # SCENARIO 1: no_of_audio == 1
         ## if there is only 1 loop to begin with, we return noise_data and sr_noise directly
-        if no_of_audio==1:
+        if no_of_audio == 1:
             # Log parameter
-            noise_paras_dict[f"noise_{no_of_audio-audio_counter+1}"]=noise_paras
+            noise_paras_dict[f"noise_{no_of_audio - audio_counter + 1}"] = noise_paras
 
             return noise_data, sr, noise_paras_dict
-        
+
         # SCENARIO 2: no_of_audio > 1
         # if no_of_audio is > 1, then we perform loop the stacking of audio
         ## for the first loop, we initialise noise_data as the "base" of the stack
-        
-        if no_of_audio == audio_counter: #checker for loop number 1, setting up "base" of the stack
+
+        if no_of_audio == audio_counter:  # checker for loop number 1, setting up "base" of the stack
             noise_stack_data = copy.deepcopy(noise_data)
 
         # for loops beyond the first, we stack the noise data onto the "base"
         else:
             # generate a random SNR
-            noise_to_stack_ratio_dbs = random.uniform(NNR_db_range[0],NNR_db_range [1])
+            noise_to_stack_ratio_dbs = random.uniform(NNR_db_range[0], NNR_db_range[1])
             # stack audio data
             noise_stack_data = F.add_noise(noise_stack_data, noise_data, torch.tensor([noise_to_stack_ratio_dbs]))
 
             # Log parameter
             noise_paras["noise_to_stack_NNR"] = noise_to_stack_ratio_dbs
-        
+
         # Log noise_paras
-        noise_paras_dict[f"noise_{no_of_audio-audio_counter+1}"]=noise_paras
+        noise_paras_dict[f"noise_{no_of_audio - audio_counter + 1}"] = noise_paras
 
         audio_counter -= 1
-                
+
     ## Return noise stack when we are done!
     return noise_stack_data, sr, noise_paras_dict
