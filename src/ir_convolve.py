@@ -60,8 +60,10 @@ def ir_convolve(audio_data,
             raise ValueError("Please indicate a valid no_of_ir (use integers)")
         ## Choose no_of_irs in ir_repo and average them
         chosen_ir= np.zeros_like(np.load(os.path.join(ir_repo, random.choice(os.listdir(ir_repo)))))
-        
+
         for i in range(no_of_ir): # ??? is this ok
+            # hmmmm as you suspect i'm not sure if this is the correct way to interpolate RIRs
+            # might need to do some fft based merging instead
             sampled_ir = random.choice(os.listdir(ir_repo))
             # Log parameters
             paras["RIRs_used"].append(sampled_ir)
@@ -104,6 +106,8 @@ def ir_convolve(audio_data,
     # Normalise data as it will become much softer
     max_value = np.max(np.abs(convolved_audio_data))
     if max_value > 0:
+        # TODO: softer audio is an intended effect of rir convolution, is increasing the gain the right thing to do?
+        # unless there's clipping of some sort, maybe we shouldn't normalize it up to 100%
         convolved_audio_data = convolved_audio_data/max_value
 
     ## Repack into audio_data format as per pytorch

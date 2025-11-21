@@ -48,6 +48,7 @@ def bulk_generation(number_of_audios = 10,
 
         ## Stage III-A: Generate Clean Speech
         # Load random audio from raw speech folder
+        # TODO: crashes if this randomly chooses a non-audio file like `.DS_Store`
         speech_file = random.choice(os.listdir(speech_folder))
         sample_data, sr = load_audio_with_pytorch(os.path.join(speech_folder, speech_file))
         # Implement efects on speech data (only tempo and pitch shift)

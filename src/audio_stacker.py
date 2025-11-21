@@ -11,6 +11,7 @@ def audio_noise_stack(audio_1_data,
                       ):
     
     if (audio_1_data.shape != audio_2_data.shape):
+        # TODO: consider truncation or padding instead, within some reasonable difference (a few audio samples)
         raise ValueError ("The shape of the audio and noise data do not match!")
     
     stack_data = F.add_noise(audio_1_data, audio_2_data, torch.tensor([SNR]))

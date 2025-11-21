@@ -59,6 +59,8 @@ def rir_generate(quantity,
         # We set a seed number for each loop beginning with the master seed number
         # this is to facilitate the resumption of RIR generation in the event when something crashes
         # we will count the number of files in output folder and then add to the master seed each round
+        # TODO: this makes the function non-idempotent, which is likely a bug
+        # consider using the hash of a file as its seed instead
         seed = master_seed + len(os.listdir(output_folder))
         np.random.seed(seed)
 

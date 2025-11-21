@@ -16,8 +16,9 @@ from src.phone_lowpass import phone_augment
 def regenerate_dataset(log_json,
                        speech_folder = "./data/00_raw_speech/",
                        room_ir_folder = "./data/Impulse_Responses/room_IRs/",
-                       noise_stationary_folder = "./data/01_stationary_noise/", 
-                       noise_nonstationary_folder = "./data/02_non-stationary_noise/",
+                       # TODO: warning! you're not using these input, instead you're hardcoding some values below
+                       # noise_stationary_folder = "./data/01_stationary_noise/",
+                       # noise_nonstationary_folder = "./data/02_non-stationary_noise/",
                        fabric_ir_folder ="./data/Impulse_Responses/fabric_IRs/",
                        handphone_ir_folder = "./data/Impulse_Responses/handphone_IRs/"):
 
@@ -170,7 +171,7 @@ def regenerate_dataset(log_json,
                     echo = True
                 else:
                     list_of_delays = None
-                    list_of_delays = None
+                    list_of_delays = None  # TODO: i think you meant `list_of_decays`, likely a bug
                     echo = False
             
             NNR = nonstationary_paras[f"noise_{noise_count}"]["noise_to_stack_NNR"]

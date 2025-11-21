@@ -68,6 +68,10 @@ def audio_effector(audio_wav,
     ## Here we convert the 2-D torch tensor into the 1-D array
 
     if not isinstance(audio_wav, np.ndarray):
+        # TODO: this drops all channels except the first, seems like testing code, not intended for production
+        # if you intend to convert the audio to mono, merge the channels instead
+        # TODO: rubberband can stretch multichannel audio
+        # stretching each channel individually can cause artifacts
         audio_wav = audio_wav.numpy()[0]
 
     # Set up parameters log

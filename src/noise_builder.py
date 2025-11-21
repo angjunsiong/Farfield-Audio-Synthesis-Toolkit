@@ -105,6 +105,8 @@ def noise_builder (reference_audio_data,
         noise = random.choice(os.listdir(audio_repo))
         # guard against picking up some weird file
         while "wav" not in noise:
+            # TODO: hangs permanently if noise folder is empty
+            # TODO: brittle; e.g., accepts `not-a-wav-file.txt`
             noise = random.choice(os.listdir(audio_repo))
         noise_path = os.path.join(audio_repo, noise)
         noise_data, sr_noise = load_audio_with_pytorch(noise_path)

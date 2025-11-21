@@ -172,4 +172,4 @@ cython_debug/
 
 ignored_folder/simulated_RIRs/*.npy
 ignored_folder/simulated_RIRs.zip
-
+.DS_Store
